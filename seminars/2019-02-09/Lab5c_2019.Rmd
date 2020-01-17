@@ -1,0 +1,354 @@
+---
+title: "Confidence intervals in R. ANOVA"
+author: "Alla Tambovtseva, Olga Lyashevskaya, Ilya Schurov, g`R`ik Moroz"
+date: "09-02-2019"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css:
+      - default
+      - default-fonts 
+      - "https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css"
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+  
+---
+
+<!---
+date: "09-02-2019 (updated: `r Sys.Date()`)"
+output:
+  html_document:
+    df_print: paged 
+output:
+  slidy_presentation
+
+  
+remotes::install_github('rstudio/pagedown')
+pagedown::chrome_print('any-file.html')  
+or
+xaringan::decktape('any-file.html', 'any-file.pdf')
+--->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T
+                      #, results = "hide"
+                      )
+```
+
+### Confidence intervals in R
+
+Install library `DescTools` and load it:
+
+```{r, eval=FALSE}
+# install.packages("DescTools")
+```
+
+```{r, warning=FALSE, message=FALSE}
+library(DescTools)
+```
+
+Functions that we will use today:  
+
+* BinomCI -- binomial CI  
+* MeanCI -- CI for mean values  
+* MeanDiffCI -- CI for the difference in means  
+
+---
+### Confidence intervals for proportions
+
+First, let us consider an abstract example so as to look at different effects connected with confidence intervals (sample size effect and confidence level effect). Suppose we tossed a coin 20 times and got 4 heads. 
+
+```{r}
+nheads <- 4 # number of heads
+n1 <- 20  # total number of tosses
+```
+
+--
+Now let's calculate a 95% confidence interval for the proportion of heads in such an experiment.
+
+```{r}
+BinomCI(nheads, n1) # 95% by default
+```
+
+---
+Calculate the length of a confidence interval: 
+
+```{r}
+ci.95 <- BinomCI(nheads, n1)
+ci.95[3] - ci.95[2]
+```
+
+--
+Increase the number of tosses (number of heads remains the same):
+
+```{r}
+n2 <- 40 # now 40 tosses
+ci.95.2 <- BinomCI(nheads, n2)
+ci.95.2[3] - ci.95.2[2]  
+```
+
+--
+It shrinked, right?  
+
+
+--
+Keep the number of tosses equal to 20, but increase the confidence level:
+
+```{r}
+ci.99 <- BinomCI(nheads, n1, conf.level = 0.99)
+ci.99[3] - ci.99[2] 
+```
+
+--
+It extended.  
+
+
+---
+Let’s set a true probability of getting a head in one toss of a coin.
+```{r}
+p0 <- 0.5 # true probability of getting a head in one tossing
+```
+
+Then take 1000 samples of size 100, calculate confidence intervals for proportion of ones in each sample and count how many intervals contain a population proportion (the true probability of getting a head in one toss of a coin).  
+Recall the code from our previous seminars and suppose we asked 1000 people to toss a coin 100 times and report the proportion of heads they obtained.
+
+```{r}
+n <- 100
+samples <- 1000
+dat <- matrix(sample(c(0, 1), 
+                     n * samples, 
+                     replace=TRUE), ncol=n, byrow=TRUE)
+```
+
+--
+```{r}
+cis <- BinomCI(rowSums(dat), n)
+colnames(cis) <- c("est", "lower", "upper")
+
+head(cis[,"lower"])
+head(cis[,"upper"])
+
+sum(cis[,2] <= p0 & cis[,3] >= p0)
+sum(cis[,2] <= p0 & cis[,3] >= p0)/1000
+```
+
+
+---
+### Confidence intervals: real data
+
+Now let's proceed to real data and work with *Verses* data set. 
+
+```{r}
+verses <- read.csv("https://raw.githubusercontent.com/LingData2019/LingData/master/data/poetry_last_in_lines.csv", sep = "\t")
+str(verses) # recall which variables are there
+```
+
+--
+Calculate a confidence interval for the proportion of nouns at the end of lines:
+
+```{r}
+nnouns <- nrow(verses[verses$UPoS == "NOUN", ])
+total <- nrow(verses)
+
+BinomCI(nnouns, total)
+```
+
+---
+### Confidence intervals for means
+
+Now let's turn to the data set on Icelandic language from our previuos class.
+
+```{r}
+phono <- read.csv("http://math-info.hse.ru/f/2018-19/ling-data/icelandic.csv")
+```
+
+--
+Choose aspirated and non-aspirated cases again:
+
+```{r}
+asp <- phono[phono$aspiration == "yes", ]
+nasp <- phono[phono$aspiration == "no", ]
+```
+
+--
+Calculate confidence intervals for mean values of vowel duration in each group:
+
+```{r}
+MeanCI(asp$vowel.dur)
+MeanCI(nasp$vowel.dur)
+```
+
+---
+Plot them using `sciplot`:
+
+```{r, warning=FALSE, message=FALSE}
+# install.packages("sciplot")
+library(sciplot)
+lineplot.CI(data = phono, 
+            response = vowel.dur, 
+            x.factor = aspiration)
+```
+
+---
+### Confidence intervals and significance of differences
+
+* If two CI's for a population parameter (proportion, mean, median, etc) do not overlap, it means that true values of population parameters are significantly different.
+
+* If two CI's for a population parameter overlap, true values of population parameters can (to be equal to each other), but **not** necessarily do so. For example, if two confidence intervals for means overlap, we cannot make a definite conclusion, more accurate testing is required (t-test). So, in general, comparison of confidence intervals (with the same confidence level, of course) is **not** equivalent to hypotheses testing.  
+
+
+--
+Consider a case when two CI's for means overlap, but population means are significantly different. Let's select only cases with aspirated consonants and compare the average vowel duration for round and unrounded vowels.  
+
+```{r}
+w1 <- phono[phono$aspiration == 'yes' & phono$roundness == "round", ]
+w2 <- phono[phono$aspiration == 'yes' & phono$roundness == "unrounded", ]
+```
+
+---
+Do CI's overlap?
+
+```{r}
+MeanCI(w1$vowel.dur)
+MeanCI(w2$vowel.dur)
+```
+
+Can we conclude that mean vowel duration is different for round and unrounded vowels? 
+
+---
+### T-test 
+Perform a statistical test, a two sample Student's t-test.
+
+```{r}
+# reject or not reject H0
+t.test(w1$vowel.dur, w2$vowel.dur)
+```
+
+--
+Null hypotheses should be rejected, so population means are different. 
+
+
+--
+Actually, testing hypothesis about the equality of population means is equivalent to finding whether *a CI for the difference of means* includes zero. 
+
+```{r}
+# CI for difference between means
+MeanDiffCI(w1$vowel.dur, w2$vowel.dur)
+```
+
+--
+Thus, intersection of CI's for means (or for any population parameters) $\ne$ CI for the difference includes zero $\ne$ $H_0$ about equality should not be rejected.
+
+---
+### ANOVA
+
+Load data on Icelandic:
+
+```{r}
+phono <- read.csv("http://math-info.hse.ru/f/2018-19/ling-data/icelandic.csv")
+```
+
+```{r results=TRUE}
+str(phono)
+```
+
+Look at the groups of consonants:
+
+```{r results=T}
+table(phono$cons1)
+```
+
+```{r message=FALSE}
+require(tidyverse)
+```
+
+```{r results=TRUE}
+phono %>% # dplyr style
+  select(cons1) %>% 
+  group_by(cons1) %>% 
+  count()
+```
+
+---
+Create a boxplot for vowel duration for each group of consonants:
+
+```{r}
+boxplot(phono$vowel.dur ~ phono$cons1) 
+```
+
+---
+Perform ANOVA to find out if the variation between groups is significantly larger than the variation within groups:
+
+```{r}
+res <- aov(phono$vowel.dur ~ phono$cons1)
+res
+```
+
+This type of ANOVA is called a one-way ANOVA for independent groups.
+
+--
+More informative summary:
+
+```{r}
+# H0: there are no difference in population means by groups
+summary(res)
+```
+
+
+---
+ANOVA with multiple groups:
+
+```{r}
+res <- aov(phono$vowel.dur ~ phono$cons1 + phono$roundness)
+res
+```
+
+--
+More informative summary:
+
+```{r}
+# H0: there are no difference in population means by groups
+summary(res)
+```
+
+
+---
+Create a boxplot for vowel duration for each group of consonants and for both groups of roundness:
+
+```{r}
+boxplot(phono[phono$roundness == "round",]$vowel.dur ~ phono[phono$roundness == "round",]$cons1)
+```
+
+---
+Create a boxplot for vowel duration for each group of consonants and for both groups of roundness:
+
+```{r}
+boxplot(phono[phono$roundness == "unrounded",]$vowel.dur ~ phono[phono$roundness == "unrounded",]$cons1) 
+```
+
+---
+Plot all groups together:
+
+```{r}
+boxplot(phono$vowel.dur ~ phono$cons1 + phono$roundness)
+```
+
+---
+Create a boxplot for vowel duration for each group of consonants and for both groups of roundness:
+
+```{r}
+boxplot(phono[phono$roundness == "unrounded",]$vowel.dur ~ phono[phono$roundness == "unrounded",]$cons1) 
+```
+
+---
+Create the same boxplot with ggplot2
+
+```{r}
+ggplot(data = phono, # add the data
+       aes(x = cons1, y = vowel.dur, # set x, y coordinates
+           color = cons1)) +    # color by cons1
+  geom_boxplot() +
+  facet_grid(~roundness) # create panes base on health status
+```

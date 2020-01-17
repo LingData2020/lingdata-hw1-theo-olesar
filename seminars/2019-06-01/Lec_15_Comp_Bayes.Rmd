@@ -1,0 +1,439 @@
+---
+title: "15. Empirical Bayes Estimation"
+author: "O. Lyashevskaya, G. Moroz, I. Schurov"
+output: 
+  html_document:
+    df_print: paged
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, echo = FALSE, comment = "")
+library(tidyverse)
+theme_set(theme_bw())
+```
+
+![](15_stat.jpg)
+
+### 1. Распределение вероятностей
+
+* Значение вероятностей должно быть положительным. 
+* Сумма/интеграл вероятностей всех возможных исходов должна/должен быть 1. 
+* Для любых двух взаимоисключающих событий, вероятность того, что одно собтие или другое является суммой их индивидуальных вероятностей.
+
+#### Дискретный случай: 
+$$p(⚀) + p(⚁) + p(⚂) + p(⚃) + p(⚄) + p(⚅) = \sum_{i = 0}^{n} p(x_i) = 1$$
+
+#### Непрерывный случай:
+
+```{r}
+set.seed(42)
+data.frame(value = rnorm(100, 100, 20)) %>% 
+  ggplot(aes(value)) +
+  geom_density(fill = "lightblue")+
+  labs(x="", y = "")+
+  xlim(20, 180)
+```
+$$ = \int p(x)dx = 1$$
+
+
+
+### 2. Распределение двух переменных
+
+#### Совместное распределение
+$$p(A, B) = p(B, A)$$
+
+![](https://upload.wikimedia.org/wikipedia/commons/9/95/Multivariate_normal_sample.svg)
+
+(Картинка из Википедии)
+
+#### Условная вероятность
+$$p(B|A) = p(A, B)/P(A)$$
+
+#### Дискретный случай:
+```{r}
+library(vcd)
+mosaic(HairEyeColor[,,1]+HairEyeColor[,,2], shade=TRUE, legend=TRUE)
+d <- round(addmargins(prop.table(HairEyeColor[,,1]+HairEyeColor[,,2])), 2)
+as.data.frame(d) %>% 
+  spread(Eye, Freq)
+```
+
+* _совместная вероятность_: вероятность иметь голубые глаза и светлые волосы:
+$$p(Hair = Blond, Eye = Blue) = p(Eye = Blue, Hair = Blond) = 0.16$$
+* _условная вероятность_: вероятность иметь светлые волосы, если известно, что голубые глаза:
+$$p(Hair = Blond|Eye = Blue) = \frac{p(Eye = Blue, Hair = Blond)}{\sum_{i=1}^{n} p(Eye = Blue, Hair = x_i)} = \frac{0.16}{0.36} \approx 0.45$$
+
+#### Непрерывный случай:
+
+```{r, cache=TRUE}
+multilingualism <- read_csv("https://github.com/LingConLab/2018_suplementary_for_Gendered_multilingualism_in_highland_Daghestan_story_of_a_loss/blob/master/data.csv?raw=true")
+multilingualism %>% 
+  distinct(`year of birth`, sex, index) %>% 
+  ggplot(aes(`year of birth`,  fill = sex)) +
+  geom_density(alpha = 0.4)+
+  xlim(1870, 2015)
+```
+
+* _совместная вероятность_: вероятность быть женского пола и родиться в 1945 году:
+$$p(sex = f, year = 1945) = p(year = 1945, sex = f)$$
+* _условная вероятность_: вероятность что человек родился в 1945 году, если известно ,что это женщина:
+$$p(year = 1945|sex = f) = \frac{p(sex = f, year = 1945)}{\int p(sex = f, year = x)dx}$$
+
+
+
+### 3. Теорема Байеса
+
+$$p(A|B) = \frac{p(A, B)}{p(B)}\Rightarrow p(A|B) \times p(B) = p(A, B)$$
+$$p(B|A) = \frac{p(B, A)}{p(A)}\Rightarrow p(B|A) \times p(A) = p(B, A)$$
+$$p(A|B) \times p(B) = p(B|A) \times p(A)$$
+$$p(A|B) = \frac{p(B|A)p(A)}{p(B)}$$
+
+#### Дискретный случай:
+$$p(A|B) = \frac{p(B|A)p(A)}{\sum_{i=1}^{n} p(B, a_i) \times p(a_i)}$$
+
+#### Непрерывный случай:
+$$p(A|B) = \frac{p(B|A)p(A)}{\int p(B, a) \times p(a)da}$$
+
+* what is happening in numerator: 
+![](15_bayes.jpg)
+
+* what is happening during the division: 
+
+$$\frac{w}{w+x+y+z}:\frac{w+x}{w+x+y+z} = \frac{w}{w+x}$$
+
+### 4. Байесовский статистический вывод
+
+* p(θ) --- оцениваемый параметр
+* p(Data) --- данные
+
+$$p(θ|Data) = \frac{p(Data|θ)\times p(θ)}{p(Data)}$$
+
+* p(θ|Data) --- апостериорное распределение (posterior)
+* p(Data|θ) --- функция правдоподобия (likelihood), сопряженное априорное распределение (conjugate prior)
+* p(θ) --- априорное распределение (prior)
+* p(Data) --- данные
+
+Теорема Байеса позволяет перейти нашего априорного распределения, p(θ), к апостериорному распределению, p(θ|D), принима во внимание данные D. Предположим, что мы наблюдаем новые данные D'. Мы можем снова проапдейтить наше распределение от p(θ|D) до p(θ|D', D). Зависит ли результат от порядка апдейта (сначала апдейтим D, а потом D' или наоборот)?
+
+$$p(θ|Data, Data') = p(θ|Data', Data)$$
+
+Так, что для корректного моделирования нужно знать семью распределений и сопряженное априорное распределение:
+
+```{r}
+data_frame(likelihood = c("Bernulli", "Multinomial", "...", "Normal with known variance", "Uniform","..."),
+           `conjugate prior distribution` = c("Beta", "Dirichlet", "...", "Normal", "Pareto", "..."))
+```
+
+
+Формула Байеса по версии скайпа:
+
+![](bayes_in_skype.jpg)
+
+Формула Байеса по версии xkcd:
+
+![](modified_bayes_theorem.png)
+
+### 5. Врезка про функцию правдоподобия
+
+Предположим что распределение количества согласных в языках мира можно описать нормальным распределением со средним 22 и стандартным отклонением 6:
+
+```{r, echo=FALSE}
+data_frame(x = 0:80) %>% 
+  ggplot(aes(x)) +
+  stat_function(fun = function(x) dnorm(x, 22, 6))+
+  labs(title = "Количество согласных в языках мира (фэйк)")
+```
+
+Тогда вероятность того, что в выбранных произвольно языках окажется от 23 до 32 согласных, равна интегралу нормального распределения в указанном промежутке:
+
+```{r, echo = FALSE}
+data_frame(x = 0:80) %>% 
+  ggplot(aes(x)) +
+  stat_function(fun = function(x) dnorm(x, 22, 6))+
+  stat_function(fun = function(x) dnorm(x, 22, 6), 
+                xlim = c(23,32), 
+                geom = "area",
+                fill = "lightblue")+
+  labs(title = "Количество согласных в языках мира (фэйк)")
+```
+
+$$P\left(X \in (23,\, 32) | X \sim \mathcal{N}(\mu = 22,\, \sigma^{2}=6)\right) = ...$$
+
+```{r, echo = TRUE}
+pnorm(32, mean = 22, sd = 6) - pnorm(23, mean = 22, sd = 6)
+```
+
+Когда мы говорим про функцию правдоподобия, мы нашли еще один язык в котором оказалось 33 согласных, и нас интересует, насколько правдоподобна функция нормального распределения со средним 22 и стандартным отклонением 6 при значении переменной 33. Это значение равно функции плотности:
+
+```{r, echo = FALSE}
+data_frame(x = 0:80) %>% 
+  ggplot(aes(x)) +
+  stat_function(fun = function(x) dnorm(x, 22, 6))+
+  geom_segment(aes(x = 33, xend = 33, y = 0, yend = dnorm(33, 22, 6)), color = "red")+
+  geom_segment(aes(x = 33, xend = 0, y = dnorm(33, 22, 6), yend = dnorm(33, 22, 6)), color = "red",
+               arrow = arrow(length = unit(0.03, "npc")))+
+  scale_x_continuous(breaks = c(0:4*20, 33))+
+  scale_y_continuous(breaks = c(0:3*0.02, round(dnorm(33, 22, 6), 3)))+
+  labs(title = "Количество согласных в языках мира (фэйк)")
+```
+
+$$L\left(X \sim \mathcal{N}(\mu = 22,\, \sigma^{2}=6)|x = 33\right) = ...$$
+
+```{r, echo = TRUE}
+dnorm(33, 22, 6)
+```
+
+В результате мы можем пострить график, на котором будет правдоподобие моделей с разными средними и фиксированным стандартным отклонением.
+
+```{r}
+data_frame(x = 0:80) %>% 
+  ggplot(aes(x)) +
+  stat_function(fun = function(x) dnorm(33, x, 6))+
+  scale_x_continuous(breaks = c(0:4*20, 33))+
+  labs(x = latex2exp::TeX("$\\mu$"),
+       y = latex2exp::TeX("$L(N(\\mu,\\, \\sigma^{2}=6)|x = 33))$"),
+       title = "Насколько правдоподобны модели с разными μ, если мы наблюдаем значение 33?")
+```
+
+А что если у нас не одно наблюдение, а несколько? Например, мы наблюдаем языки с 33 и 26 согласными? События независимы друг от друга, значит, мы можем перемножить получаемые вероятности.
+
+```{r}
+data_frame(x = 0:80) %>% 
+  ggplot(aes(x)) +
+  stat_function(fun = function(x) dnorm(33, x, 6)*dnorm(26, x, 6))+
+  scale_x_continuous(breaks = c(0:4*20, 33, 26))+
+  labs(x = latex2exp::TeX("$\\mu$"),
+       y = latex2exp::TeX("$L(N(\\mu,\\, \\sigma^{2}=6)|x = 33))$"),
+       title = "Насколько правдоподобны модели с разными μ, если мы наблюдаем значения 26 и 33?")
+```
+
+**Самое важное:**
+
+* вероятность --- P(data|distribution)
+* правдоподобие --- L(distribution|data)
+
+Интеграл распределения вероятностей равен 1. [Интеграл правдоподобия может быть не равен 1](https://stats.stackexchange.com/a/31241/225843).
+
+### 5.1
+
+Посчитайте значение правдоподобия модели $\mathcal{N}(\mu = 910,\, \sigma^{2}=150)$ для встроенного датасета `Nile`.
+
+```{r, include=FALSE}
+prod(dnorm(Nile, 910, 150))
+```
+
+<form name="FormThree" onsubmit="return validateFormThree()" method="post">
+<input type="text" name="answerThree">
+<input type="submit" value="check">
+</form><br>
+
+
+### 6. Дискретный пример байесовского статистического вывода
+[В датасете c грибами](https://raw.githubusercontent.com/agricolamz/2019_BayesDan_winter/master/datasets/mushrooms.csv) (взят c [kaggle](https://www.kaggle.com/uciml/mushroom-classification)) представлено следующее распределение по месту обитания:
+
+```{r, echo = TRUE}
+df <- read_csv("https://github.com/agricolamz/2019_BayesDan_winter/blob/master/datasets/mushrooms.csv?raw=true")
+df %>% 
+  count(class, habitat) %>% 
+  group_by(class) %>% 
+  mutate(prop = n/sum(n)) %>% 
+  ggplot(aes(class, prop, fill = habitat, label = round(prop, 3)))+
+  geom_col()+
+  geom_text(position = position_stack(vjust = 0.5), color = "white")
+```
+
+Мы нашли некоторый новый вид грибов на лужайке (`grasses`). Какой это может быть гриб: съедобный или ядовитый? У нас нет никаких идей, почему бы нам отдать предпочтения той или иной гипотезе, так что будем использовать неинформативное априорное распределение:
+
+```{r, echo = TRUE}
+data_frame(model = c("edible", "poisonous"),
+           prior = 0.5,
+           likelihood = c(0.335, 0.189),
+           product = prior*likelihood,
+           posterior = product/sum(product))
+```
+
+Вот мы и сделали байесовский апдейт. Теперь апостериорное распределение, которые мы получили на предыдущем шаге, мы можем использовать в новом апдейте. Допустим, мы опять нашли этот же вид гриба, но в этот раз в лесу (`woods`).
+
+```{r, echo = TRUE}
+data_frame(model = c("edible", "poisonous"),
+           prior_2 = c(0.639, 0.361),
+           likelihood_2 = c(0.447, 0.324),
+           product_2 = prior_2*likelihood_2,
+           posterior_2 = product_2/sum(product_2))
+```
+
+
+### 7. Биномиальные данные
+
+Биномиальные данные возникают, когда нас интересует доля успехов в какой-то серии эксперементов Бернулли.
+
+#### 7.1  Биномиальное распределение
+
+Биномиальное распределение --- распределение количества успехов эксперементов Бернулли из *n* попыток с вероятностью успеха *p*.
+
+$$P(k | n, p) = \frac{n!}{k!(n-k)!} \times p^k \times (1-p)^{n-k} =  {n \choose k} \times p^k \times (1-p)^{n-k}$$ 
+$$ 0 \leq p \leq 1; n, k > 0$$
+
+```{r, echo = TRUE}
+data_frame(x = 0:50,
+           density = dbinom(x = x, size = 50, prob = 0.16)) %>% 
+  ggplot(aes(x, density))+
+  geom_point()+
+  geom_line()+
+  labs(title = "Биномиальное распределение p = 0.16, n = 50")
+```
+
+#### 7.2 Бета распределение
+
+$$P(x; α, β) = \frac{x^{α-1}\times (1-x)^{β-1}}{B(α, β)}; 0 \leq x \leq 1; α, β > 0$$
+
+Бета функция:
+
+$$Β(α, β) = \frac{Γ(α)\times Γ(β)}{Γ(α+β)} = \frac{(α-1)!(β-1)!}{(α+β-1)!} $$
+
+
+```{r, echo = TRUE}
+data_frame(x = seq(0, 1, length.out = 100),
+           density = dbeta(x = x, shape1 = 8, shape2 = 42)) %>% 
+  ggplot(aes(x, density))+
+  geom_point()+
+  geom_line()+
+  labs(title = "Бета распределение α = 8, β = 42")
+```
+
+Можно поиграть с разными параметрами:
+
+```{r, eval = FALSE}
+shiny::runGitHub("agricolamz/beta_distribution_shiny") 
+```
+
+$$\mu = \frac{\alpha}{\alpha+\beta}$$
+
+$$\sigma^2 = \frac{\alpha\times\beta}{(\alpha+\beta)^2\times(\alpha+\beta+1)}$$
+
+
+#### 7.3 Байесовский апдейт биномиальных данных
+
+$$Beta_{post}(\alpha_{post}, \beta_{post}) = Beta(\alpha_{prior}+\alpha_{data}, \beta_{prior}+\beta_{data}),$$
+где $Beta$ --- это бета распределение
+
+```{r, eval = FALSE}
+shiny::runGitHub("agricolamz/bayes_for_binomial_app") 
+```
+
+
+### 7.4 Байесовский апдейт биномиальных данных: дискретный случай
+
+
+```{r, echo = TRUE}
+data_frame(x = rep(seq(0, 1, length.out = 100), 6),
+           density = c(dbeta(unique(x), shape1 = 8, shape2 = 42),
+                       dbeta(unique(x), shape1 = 16, shape2 = 34),
+                       dbeta(unique(x), shape1 = 24, shape2 = 26),
+                       dbeta(unique(x), shape1 = 8+4, shape2 = 42+16),
+                       dbeta(unique(x), shape1 = 16+4, shape2 = 34+16),
+                       dbeta(unique(x), shape1 = 24+4, shape2 = 26+16)),
+           type = rep(c("prior", "prior", "prior", "posterior", "posterior", "posterior"), each = 100),
+           dataset = rep(c("prior: 8, 42", "prior: 16, 34", "prior: 24, 26",
+                           "prior: 8, 42", "prior: 16, 34", "prior: 24, 26"), each = 100)) %>% 
+  ggplot(aes(x, density, color = type))+
+  geom_line()+
+  facet_wrap(~dataset)+
+  labs(title = "data = 4, 16")
+```
+
+
+
+
+### 8. Как пепестать бояться выбирать априорное распределение?
+
+* Априорное распределение --- это способ инкорпорировать предыдущее знание
+* Апдейт априорного распределение и получение апостериорного --- лучше заточен для научного мышления
+* Можно выбрать неинформативное априорное распределение
+* Можно выбрать несколько априорных распределений
+* ... иногда есть дополнительный трюк --- Эмпирическая байесовская оценка.
+
+Если наши данные представляют собой группировки независимых наблюдений, в которых мы предполагаем сходное значение оцениваемого параметра θ (доля *не* в куче рассказов Чехова, количество согласных в языках мира и т. д.), можно применять эмпирическую байесовскую оценку априорного распределения.
+
+Эмпирическая байесовская оценка --- один из байесовских методов, в рамках которого:
+
+* производят оценку априорного распределения вероятностей на основании имеющихся данных
+* используют полученное априорное распределение для получение апостериорной оценки для каждого наблюдения
+
+```{r}
+chekhov <- read_csv("https://raw.githubusercontent.com/agricolamz/2019_BayesDan_winter/master/datasets/chekhov.csv")
+chekhov %>% 
+  mutate(trunc_titles = str_trunc(titles, 25, side = "right"),
+         average = n/n_words) ->
+  chekhov
+head(chekhov)
+```
+
+* 311 рассказов А. Чехова
+* число слов в каждом рассказе
+
+Наши данные:
+```{r, echo = TRUE}
+chekhov %>% 
+  ggplot(aes(average)) +
+  geom_histogram(fill = "lightblue")+
+  geom_density(color = "red")+
+  theme_bw()+
+  labs(title = 'Частотность слова "не" на основе 305 рассказов А. Чехова')
+```
+
+В данном случае, данные можно подогнать под бета распределение $Χ \sim Beta(α_0, β_0)$ (это далеко не всегда так). Подгонку можно осуществлять множеством разных функций, но я воспользуюсь следующей системой уравнений:
+
+$$\mu = \frac{\alpha}{\alpha+\beta}$$
+$$\sigma = \frac{\alpha\times\beta}{(\alpha+\beta)^2\times(\alpha+\beta+1)}$$
+
+Из этой системы можно выразить $\alpha$ и $\beta$:
+
+$$\alpha = \left(\frac{1-\mu}{\sigma^2} - \frac{1}{\mu}\right)\times \mu^2$$
+$$\beta = \alpha\times\left(\frac{1}{\mu} - 1\right)$$
+
+```{r, echo = TRUE}
+mu <- mean(chekhov$average)
+var <- var(chekhov$average)
+alpha0 <- ((1 - mu) / var - 1 / mu) * mu ^ 2
+beta0 <- alpha0 * (1 / mu - 1)
+alpha0
+beta0
+```
+
+Посмотрим, насколько хорошо, получившееся распределение подходит к нашим данным:
+```{r, echo = TRUE}
+x <- seq(0, 0.1, length = 1000)
+estimation <- data_frame(
+  x = x,
+  density = c(dbeta(x, shape1 = alpha0, shape2 = beta0)))
+
+chekhov %>% 
+  ggplot(aes(average)) +
+  geom_density(fill = "lightblue")+
+  geom_line(data = estimation, aes(x, density), color = 'red')+
+  theme_bw()+
+  labs(title = 'Частотность слова "не" на основе 305 рассказов А. Чехова',
+       subtitle = "черной линией показано бета распределение с α = 5.283022 и β = 231.6328")
+```
+
+Полученное распределение можно использовать как априорное распределение для апдейта значений из каждого рассказа. Этот трюк и называется эмпирическая байесовская оценка.
+
+### [Ссылка на семинар](https://docs.google.com/forms/d/e/1FAIpQLSf8lFqFkAMn01y7pWlISJXcuAC2IYMD-BIWoTRzjHYtacVEgg/viewform)
+
+
+<script>
+function validateFormThree() {
+    var x = document.forms["FormThree"]["answerThree"].value;
+    if (x != "1.085036e-285") {
+        alert("У меня другой ответ...");
+        return false;
+    } else {
+        alert("Да, все правильно");
+        return false;
+    }
+}
+</script>
+

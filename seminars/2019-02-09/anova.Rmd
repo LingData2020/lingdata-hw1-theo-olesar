@@ -1,0 +1,45 @@
+---
+title: 'Linguistic Data: Quantitative Analysis and Visualisation'
+author: "Ilya Schurov, Olga Lyashevskaya, George Moroz, Alla Tambovtseva"
+date: "09 February 2018"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+subtitle: 'ANOVA: analysis of variance'
+---
+
+Load data on Icelandic:
+
+```{r}
+phono <- read.csv("http://math-info.hse.ru/f/2018-19/ling-data/icelandic.csv")
+```
+
+Look at groups of consonants:
+
+```{r}
+table(phono$cons1)
+```
+
+Create a boxplot for vowel duration for each group of consonants:
+
+```{r}
+boxplot(phono$vowel.dur ~ phono$cons1) 
+```
+
+Perform ANOVA:
+
+```{r}
+res <- aov(phono$vowel.dur ~ phono$cons1)
+res
+```
+
+More informative summary:
+
+```{r}
+# H0: there are no difference in population means by groups
+summary(res)
+```
+
+**Question:** judging by the output above, can we conclude that average vowel duration differ significantly in different groups of consonants?

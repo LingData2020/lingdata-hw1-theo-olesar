@@ -1,0 +1,33 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+tosses <- 10
+samples <- 10000
+dat <- matrix(sample(c(0, 1), tosses * samples, replace=TRUE), ncol=tosses, byrow=TRUE)
+pbar <- rowSums(dat) / tosses
+hist(pbar, breaks=tosses, xlim=c(0, 1))
+```
+
+```{r}
+binom.test(3, 10)
+```
+
+```{r}
+2/2**10
+```
+
+```{r}
+k <- rowSums(dat)
+```
+
+```{r}
+(length(k[k<=3]) + length(k[k>=10-3])) / samples
+```
+```{r}
+length(k[k>=8])
+```
+
+Load some dataset and check some null hypothesis with binomial test.
+

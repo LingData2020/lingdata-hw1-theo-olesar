@@ -1,0 +1,322 @@
+---
+title: "2. tidyverse"
+author: "Г. Мороз"
+editor_options: 
+  chunk_output_type: console
+output:
+  html_document:
+    theme: spacelab
+    highlight: pygments
+    toc: yes
+    toc_position: right
+    toc_depth: 4
+    toc_float: yes
+    smooth_scroll: false
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+<style>
+.parallax {
+    /* The image used */
+    background-image: url("2_tidyverse.png");
+    
+    /* Set a specific height */
+    min-height: 300px; 
+
+    /* Create the parallax scrolling effect */
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: auto;
+}
+.parallax2 {
+    /* The image used */
+    background-image: url("2_magrittr.png");
+    
+    /* Set a specific height */
+    min-height: 300px; 
+
+    /* Create the parallax scrolling effect */
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: auto;
+}
+</style>
+
+<div class="parallax"></div>
+
+
+### 1. Введение
+[_tidyverse_](https://www.tidyverse.org) --- это набор пакетов:
+
+* _dplyr_, для преобразованиия данных
+* _ggplot2_, для визуализации
+* _tidyr_, для формата tidy data
+* _readr_, для чтения файлов в R
+* _purrr_, для функционального программирования
+* _tibble_, для работы с тибблами, современный вариант датафрейма
+
+Полезно также знать:
+
+* _readxl_, для чтения .xls и .xlsx
+* _jsonlite_, для работы с JSON
+* _rvest_, для веб-скреппинга
+* _lubridate_, для работы с временем
+* _tidytext_, для работы с текстами и корпусами
+* _broom_, для перевода в tidy формат статистические модели
+
+```{r, message = TRUE}
+library(tidyverse)
+```
+
+<div class="parallax"></div>
+### 2. tible
+
+```{r, eval=FALSE}
+head(iris)
+as_tibble(iris)
+data_frame(id = 1:12,
+           letters = month.name)
+```
+
+
+<div class="parallax"></div>
+
+### 3. Чтение файлов: readr, readxl
+
+```{r}
+library(readr)
+df <- read_csv("https://goo.gl/v7nvho")
+head(df)
+df <- read_tsv("https://goo.gl/33r2Ut")
+head(df)
+df <- read_delim("https://goo.gl/33r2Ut", delim = "\t")
+head(df)
+library(readxl)
+xlsx_example <- readxl_example("datasets.xlsx")
+df <- read_excel(xlsx_example)
+head(df)
+excel_sheets(xlsx_example)
+df <- read_excel(xlsx_example, sheet = "mtcars")
+head(df)
+rm(df)
+```
+
+<div class="parallax"></div>
+
+### 4. `dplyr`
+
+```{r}
+homo <- read_csv("http://math-info.hse.ru/f/2018-19/ling-data/Chi.kuk.2007.csv")
+homo
+```
+
+The majority of examples in that presentation are based on [Hau 2007](http://goo.gl/MKfSc6). Experiment consisted of a perception and judgment test aimed at measuring the correlation between acoustic cues and perceived sexual orientation. Naïve Cantonese speakers were asked to listen to the Cantonese speech samples collected in Experiment and judge whether the speakers were gay or heterosexual. There are 14 speakers and following parameters:
+
+* [s] duration (_s.duration.ms_)
+* vowel duration (_vowel.duration.ms_)
+* fundamental frequencies mean (F0) (_average.f0.Hz_)
+* fundamental frequencies range (_f0.range.Hz_)
+* percentage of homosexual impression (_perceived.as.homo_)
+* percentage of heterosexal impression (_perceived.as.hetero_)
+* speakers orientation (_orientation_)
+* speakers age (_age_)
+
+#### 4.1 `dplyr::filter()`
+How many speakers are older than 28?
+
+```{r}
+homo %>%
+  filter(age > 28, s.duration.ms < 60)
+```
+
+`%>%` --- конвеер (pipe) отправляет результат работы одной функции в другую.
+
+```{r}
+sort(sqrt(abs(sin(1:22))), decreasing = TRUE)
+1:22 %>% 
+  sin() %>% 
+  abs() %>% 
+  sqrt() %>% 
+  sort(., decreasing = TRUE) # зачем здесь точка?
+```
+
+Конвееры в _tidyverse_ пришли из пакета _magrittr_. Иногда они работают не корректно с функциями не из _tidyverse_.
+
+<div class="parallax2"></div>
+
+#### 4.2 `dplyr::slice()`
+
+```{r}
+homo %>%
+  slice(3:7)
+```
+
+<div class="parallax2"></div>
+
+#### 4.3 `dplyr::select()`
+
+```{r}
+homo %>%
+  select(8:10)
+homo %>%
+  select(speaker:average.f0.Hz)
+homo %>%
+  select(-speaker)
+homo %>%
+  select(-c(speaker, perceived.as.hetero, perceived.as.homo, perceived.as.homo.percent))
+homo %>%
+  select(speaker, age, s.duration.ms)
+```
+
+<div class="parallax2"></div>
+
+#### 4.4 `dplyr::arrange()`
+
+```{r}
+homo %>%
+  arrange(orientation, desc(age))
+```
+
+<div class="parallax2"></div>
+
+#### 4.5 `dplyr::distinct()`
+
+```{r}
+homo %>%
+  distinct(orientation)
+homo %>%
+  distinct(orientation, age > 20)
+```
+
+<div class="parallax2"></div>
+
+#### 4.6 `dplyr::mutate()`
+
+```{r}
+homo %>%
+  mutate(f0.mn = average.f0.Hz - f0.range.Hz/2,
+         f0.mx = (average.f0.Hz + f0.range.Hz/2))
+```
+
+<div class="parallax2"></div>
+
+#### 4.7 `dplyr::group_by(...) %>% summarise(...)`
+
+```{r}
+homo %>%
+  summarise(min(age), mean(s.duration.ms))
+homo %>%
+  group_by(orientation) %>% 
+  summarise(my_mean = mean(s.duration.ms))
+homo %>%
+  group_by(orientation) %>% 
+  summarise(mean(s.duration.ms))
+homo %>%
+  group_by(orientation) %>% 
+  summarise(mean_by_orientation = mean(s.duration.ms))
+```
+
+Если нужно посчитать количество вхождений, то можно использовать функцию `n()` в `summarise()` или же функцию `count()`:
+
+```{r}
+homo %>% 
+  group_by(orientation, age > 20) %>% 
+  summarise(my_mean = mean(s.duration.ms), n_observations = n())
+
+homo %>% 
+  count(orientation, age > 20)
+```
+
+<div class="parallax2"></div>
+
+#### 4.8 `dplyr::.._join()`
+
+```{r}
+languages <- data_frame(
+  languages = c("Selkup", "French", "Chukchi", "Kashubian"),
+  countries = c("Russia", "France", "Russia", "Poland"),
+  iso = c("sel", "fra", "ckt", "pol")
+  )
+languages
+country_population <- data_frame(
+  countries = c("Russia", "Poland", "Finland"),
+  population_mln = c(143, 38, 5))
+country_population
+inner_join(languages, country_population)
+left_join(languages, country_population)
+right_join(languages, country_population)
+anti_join(languages, country_population)
+anti_join(country_population, languages)
+full_join(country_population, languages)
+```
+
+Существует достаточно забавный трюк, который позволяет использовать `.._join()` вместе с `group_by()` и `summarise()`:
+
+```{r}
+homo %>% 
+  group_by(orientation, age > 20) %>% 
+  summarise(my_mean = mean(s.duration.ms), n_observations = n())
+homo %>% 
+  group_by(orientation, age > 20) %>% 
+  summarise(my_mean = mean(s.duration.ms), n_observations = n()) %>% 
+  left_join(homo)
+```
+
+
+<div class="parallax2"></div>
+<div class="parallax"></div>
+
+### 5. tidyr package
+
+* Short format
+
+```{r}
+df.short <- data.frame(
+                   consonant = c("stops", "fricatives", "affricates", "nasals"),
+                   initial = c(123, 87, 73, 7),
+                   intervocal = c(57, 77, 82, 78),
+                   final = c(30, 69, 12, 104))
+df.short
+```
+
+* Long format
+
+```{r, echo = FALSE}
+df.short %>% 
+  gather(position, number, initial:final) ->
+  df.long
+df.long
+```
+
+* Short format → Long format: `tidyr::gather()`
+
+```{r}
+df.short <- data.frame(
+                   consonant = c("stops", "fricatives", "affricates", "nasals"),
+                   initial = c(123, 87, 73, 7),
+                   intervocal = c(57, 77, 82, 78),
+                   final = c(30, 69, 12, 104))
+df.short
+
+df.short %>% 
+  gather(position, number, initial:final) ->
+  df.long
+df.long
+```
+
+* Long format → Short format: `tidyr::spread()`
+
+```{r}
+df.long %>% 
+  spread(position, number) ->
+  df.short
+df.short
+```
+
+<div class="parallax"></div>

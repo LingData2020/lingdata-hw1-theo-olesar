@@ -1,0 +1,150 @@
+---
+title: 'Linguistic Data: Quantitative Analysis and Visualisation'
+subtitle: Lab on a Student's t-test
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+---
+### Aspiration and vowel duration in Icelandic 
+
+This set is based on (Coretta 2017, [link](https://goo.gl/NrfgJm). This dissertation dealt with the relation between vowel duration and aspiration in consonants. Author carried out a data collection with 5 natives speakers of Icelandic. Then he extracted the duration of vowels followed by aspirated versus non-aspirated consonants. Check out whether vowels before aspirated consonants (like in Icelandic takka ‘key’ [tʰaʰka]) are signiﬁcantly shorter than vowels followed by non-aspirated consonants (like in kagga ‘barrel’ [kʰakka]).
+[Link](http://math-info.hse.ru/f/2018-19/ling-data/icelandic.csv) to the dataset.
+
+```{r}
+df <- read.csv("http://math-info.hse.ru/f/2018-19/ling-data/icelandic.csv")
+```
+
+### Descriptive statistics
+
+A general boxplot:
+
+```{r}
+boxplot(df$vowel.dur)
+```
+
+Get the number of outliers:
+
+```{r}
+length(boxplot(df$vowel.dur)$out)
+```
+
+Look at number of observations by groups (aspirated and non-aspirated cases):
+
+```{r}
+table(df$aspriration)
+```
+
+Choose two subsamples, one for words where vowels are followed by aspirated consonants and another for non-aspirated consonants.
+
+```{r}
+asp <- df[df$aspiration == 'yes',]
+nasp <- df[df$aspiration == 'no',]
+```
+
+Summary for aspirated and non-aspirated cases:
+
+```{r}
+summary(asp$vowel.dur)
+summary(nasp$vowel.dur)
+```
+
+Boxplot by groups:
+
+```{r}
+boxplot(df$vowel.dur ~ df$aspiration)
+```
+
+More interesting - let us create a boxplot by all groups (see the field `cons1`):
+
+```{r}
+boxplot(df$vowel.dur ~ df$cons1)
+```
+
+You can compare distribution of `vowel.dur` in asp(irated), fri(cative), nasp(non-aspirated), voi(ced), etc.
+
+We can limit our data to just one type of vowels, say, middle vowels. Therefore, we will work with the same type of a consonant:
+
+```{r}
+asp <- df[df$aspiration == 'yes' & df$height == 'mid', ]
+nasp <- df[df$aspiration == 'no' & df$height == 'mid', ]
+```
+
+Again, here is a summary for a corrected case:
+
+```{r}
+summary(asp$vowel.dur)
+summary(nasp$vowel.dur)
+
+nrow(asp)
+nrow(nasp)
+```
+
+### T-test
+
+Let us formulate the null hypothesis, the alternative hypotesis, and apply t-test to our dataset.
+
+```{r}
+t.test(asp$vowel.dur, nasp$vowel.dur)
+```
+
+By default, R calculates t.test with regard to the bi-directional alternative hypothesis, such as $\mu_1 \neq \mu_2$.
+
+### Unidirectional t-test
+
+H1: $\mu_{asp} \lt \mu_{nasp}$
+
+```{r}
+t.test(asp$vowel.dur, nasp$vowel.dur, alternative = "less")
+```
+
+### Density plots
+```{r, message=FALSE, warning=FALSE}
+require(tidyverse)
+require(dplyr)
+```
+
+Let's get a descriptive summary of our data in a dplyr style.
+
+```{r}
+df %>% 
+  group_by(aspiration) %>%
+  summarise(mean = mean(vowel.dur),
+            st.dev = sd(vowel.dur))
+```
+
+Density plots can be thought of as plots of smoothed histograms.
+
+```{r, warning=FALSE, message=FALSE}
+library(ggplot2)
+df %>% 
+  ggplot(aes(vowel.dur, fill = aspiration, color = aspiration))+
+  geom_density(alpha = 0.4)+
+  geom_rug()+
+  labs(title = "Vowel duration density plot",
+       caption = "Data from (Coretta 2017)",
+       x = "vowel duration")
+```
+
+Density plot by speaker:
+
+```{r}
+df %>% 
+  ggplot(aes(vowel.dur, fill = aspiration, color = aspiration))+
+  geom_density(alpha = 0.4)+
+  geom_rug()+
+  facet_wrap(~speaker)+
+  labs(title = "Vowel duration density plot, by speaker",
+       caption = "Data from (Coretta 2017)",
+       x = "vowel duration")
+```
+
+and descriptive statistics:
+
+```{r}
+df %>% 
+  group_by(aspiration, speaker) %>%
+  summarise(mean = mean(vowel.dur),
+            st.dev = sd(vowel.dur))
+```

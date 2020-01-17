@@ -1,0 +1,122 @@
+---
+title: "HW4-template"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Frequent words, their acoustic duration and co-articulation effects
+
+Many studies report shorter acoustic durations, more co-articulation and reduced articulatory targets for frequent words. The study of [Fabian Tomaschek et al.](https://www.semanticscholar.org/paper/Practice-makes-perfect-%3A-The-consequences-of-for-Tomaschek-Tucker/1e0dbc3787a6da84ffd4c3cae62f1340e4267694) (2018) investigates a factor ignored in discussions on the relation between frequency and phonetic detail, namely, that motor skills improve with experience.  
+Twenty-seven German verbs with the vowel [a:] in the stem were used. All verbs were presented in a _sie ..._ phrase which is disyllabic in its canonical form (e.g., [zi:tsa:lən]). Nine of these verbs were also presented in a phrase eliciting a monosyllabic verb form ([i:ɐtsa:lt]). Verbs were selected to cover a wide range of relative frequencies according to written and spoken corpus data.  
+Values:  
+* `LogDurationA` - log-transformed word duration (i.e. logarithms of word duration).
+* `LogDurationW` - log-transformed segment duration.
+* `Lemma`.
+* `Participant` - participant ID.
+* `Cond` - condition (slow, fast). 
+* `Exponent` - inflectional exponent of verbs: -t, -en, -n. By default: t. 
+* `Frequency` - log-transformed frequency of verbs in the corpus.
+
+### 1.0
+
+Load data and look at the summary.
+
+```{r data}
+```
+
+For brevity, below we will refer to variables `LogDurationA` and `LogDurationW` as "word duration" and "segment duration" correspondingly despite the fact that they are actually logarithms of the durations.
+
+### 1.1 Word duration and segment duration
+
+Draw histograms word duration and segment duration values.
+
+```{r hists}
+
+```
+
+
+### 1.2 Word duration and segment duration in slow and fast condition
+
+Group the data by condition and estimate if there is a difference in the word duration with the help of boxplot. Do the same for the segment duration.
+
+```{r boxplots}
+
+```
+
+It is reasonable to expect that both durations are shorter for fast speaking condition than for slow speaking condition. Can the graph you plotted confirm this? What kind of assertions can you make from the graph? E.g. can you assert something like "sample/population mean/median of word duration for fast speaking condition is shorter/longer than in slow speaking condition"?
+
+### 2.1 t-test
+
+Now we want to check statistical significance of difference between (a) word durarion in fast condition and word duration in slow condition,
+(b) segment duration in fast condition and segment duration in slow condition using Student's t-test. In other word, we want to check, is it true that these durations differ not only in the samples, but also in the populations.
+
+#### 2.1.1 Hypothesis
+
+First of all, state null hypothesis and the alternative you consider.
+
+#### 2.1.2 Application of test
+
+Apply `t.test` to check the hypothesis.
+
+```{r t-test}
+
+```
+
+#### 2.1.3 Interpretation
+
+Interpret results of the t-test. Report p-values obtained. Can you confirm that there is a difference between word duration in fast condition and word duration in slow condition in the population? The same question for the segment duration.
+
+### 2.2 Confidence intervals
+#### 2.2.1 Explicit formula
+
+Recall the formula for 95% confidence interval discussed at the lecture:
+$$
+\mathrm{CI} = \left[\bar{x} - 1.96\times \frac{\mathop{\mathrm{sd}}(x)}{\sqrt{n}},\ \bar{x} + 1.96\times \frac{\mathop{\mathrm{sd}}(x)}{\sqrt{n}}\right].
+$$
+Use it to find 95% confidence interval for population mean of word durations.
+
+
+```{r ci-formula}
+
+```
+
+#### 2.2.2 Function `MeanCI`
+
+Use function `MeanCI` from package `DescTools` (you have to install and load it first; use `install.packages` to install and `library` to load) to find the same confidence interval.
+
+(The result will be a little bit different compared to the result of the previous section due to the fact that the formula above is only approximation and `MeanCI` use more precise formula. However, for our data the difference is very small.)
+
+```{r ci-meanci}
+
+```
+
+#### 2.2.3 Function `t.test`
+You can also use function `t.test` for one sample to obtain the confidence interval for mean. Apply `t.test` to the same variable as in 2.2.1 and extract the confidence interval from the output. Does it coincide with the results of sections 2.2.1 or 2.2.2?
+
+```{r ci-ttest}
+
+```
+
+#### 2.2.4 Different confidence level
+
+Use function `MeanCI` to find 99% confidence interval for the same variable as in 2.2.1. Is it wider or shorter than 95% CI?
+
+Hint: use `conf.level` option.
+
+```{r ci-90}
+```
+
+### For computer group: Summary in a dplyr style
+
+```{r message=FALSE}
+require(tidyverse)
+```
+
+Group you data by exponent and condition and calculate mean, median, and standard deviation.
+
+```{r dplyr-sum}
+
+```

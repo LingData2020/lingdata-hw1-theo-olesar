@@ -1,0 +1,203 @@
+---
+title: 'Linguistic data: Quantitative Analysis and Visualisation'
+author: "Ilya Schurov, Olga Lyashevskaya, George Moroz, Alla Tambovtseva"
+subtitle: Mixed-effects linear models
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Linear mixed-effects models
+
+Based on [this](https://github.com/LingData2019/LingData/blob/master/seminars/2019-04-13/Lab11.pdf) Lab11.
+
+At this seminar we will work with the data set `ReductionRussian.txt`. Pavel Duryagin ran an experiment on perception of vowel reduction in Russian language. The data set includes the following variables:
+
+* `time1`: reaction time 1;
+* `time2`: reaction time 2;
+* `duration`: duration of the vowel in the stimuly (in milliseconds, ms);
+* `f1`: the first formant (if don't know about formants, see [here](https://home.cc.umanitoba.ca/~krussll/phonetics/acoustic/formants.html));
+* `f2`: the second formant;
+* `f3`: the third formant;
+* `vowel`: vowel type.
+
+Vowel classified according the 3-fold classification (`A` - a under stress, `a` - a/o as in the first syllable before the stressed one, `y` (stands for *shva*) - a/o as in the second etc. syllable before the stressed one or after the stressed syllable, cf. *g[y]g[a]t[A]l[y]*, *gogotala*, ‘guffawed’).
+
+Our goal for today is to understand how the first formant depends on the values of the second formant and whether this relationship is different for different types of vowels. 
+
+Let us load this data set from the txt-file using `read.table()` function. Please, note that we should add the option `header=TRUE` to tell R that the first row should be read as a row with column names.
+
+```{r}
+sh <- read.table("https://raw.githubusercontent.com/LingData2019/LingData/master/data/duryagin_ReductionRussian.txt", header=TRUE)
+```
+
+Look at the summary of our data and make sure all variables have correct types:
+
+```{r}
+summary(sh)
+```
+
+As later we will work with mixed-effects models, it is important to understand how many rows with missing values our data frame has (mixed-effects models work correctly when the share of NA's is small).
+
+Let's count rows with missing values:
+
+```{r}
+# ! - negation of complete.cases()
+sum(!complete.cases(sh))
+```
+
+As we see, no rows with missing values are detected, we can go on.
+
+In our data we have three groups of vowels (see above). Let's look at the summary statistics by groups:
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+
+sh %>% group_by(vowel) %>% summarise(n = n(), 
+                                     mean_f1 = mean(f1), 
+                                     mean_f2 = mean(f2))
+```
+
+As we can see, the groups are approximately of the same size (balanced), and the mean values of the first formant and of the second formant differ by groups. Now we can visualize the distribution of formants by groups using `ggplot2`.
+
+```{r}
+ggplot(data = sh, aes(x = vowel, y = f1, fill = vowel)) + 
+  geom_boxplot() +
+  labs(x = "Vowel type", y = "1st formant (in Hz)")
+```
+
+```{r}
+ggplot(data = sh, aes(x = vowel, y = f2, fill = vowel)) + 
+  geom_boxplot() + 
+labs(x = "Vowel type", y = "2nd formant (in Hz)")
+```
+
+Again we can see the differences by groups: the median values of `f1` and `f2` are different, the range of values is also different. Now we visualize the relationship between `f1` and `f2`:
+
+```{r}
+ggplot(data = sh, aes(x = f2, y = f1)) + geom_point()
+```
+
+This scatter plot is interesting. On the one hand, the relationship between `f1` and `f2` is negative: the higher are the values of `f2`, the lower the values of `f1` are.  On the other hand, if we take a closer look, we will see that there are different groups of points, and the relationship between `f1` and `f2` can be different as well. Now let us add grouping to this graph:
+
+```{r}
+ggplot(data = sh, aes(x = f2, y = f1, color = vowel)) + geom_point()
+```
+
+Now we can see that there are three different clusters, three groups of points that go one by one from the top to the bottom. If we try to add regression lines to all these clouds of points separately, the intercept will be certainly different, but slopes will be approximately the same. We can check it calculating correlation coefficients by groups:
+
+```{r}
+# cor() can be written inside summarise()
+sh %>% group_by(vowel) %>% summarise(corr = cor(f1, f2))
+```
+
+Correlation coefficients are quite low, not very different.
+
+**Bonus (for those who are interested)**:
+
+If you need correlation coefficients by groups with p-values, you can get them as well:
+
+```{r}
+sh %>% group_by(vowel) %>% summarise(corr = cor.test(f1, f2)$estimate,
+                                     pvalue = cor.test(f1, f2)$p.value)
+```
+
+All correlation coefficients are insignificant at the 5% level of significance (and at any common significance level).
+
+Now we can proceed to regression models. Let us start with a simple linear model. Fit a model `f1 ~ f2`:
+
+```{r}
+sm <- lm(f1 ~ f2, data = sh)
+summary(sm)
+```
+
+Revise an interpretation. 
+
+**Interpretation:** the effect of the second formant on the first formant is statistically significant at the 5% (and even 0.1%) level of significance, we reject the null hypothesis about the coefficient equal to zero. If `f2` increases by one Hz, `f1` decreases by 0.78 on average.
+
+We can add a regression line to our scatterplot:
+
+```{r}
+ggplot(data = sh, aes(x = f2, y = f1)) + geom_point() +
+  geom_smooth(method=lm)
+```
+
+Now let's fit a model with a categorical (factor, qualitative) predictor, vowel group.
+
+```{r}
+sm_dummy <- lm(f1 ~ f2 + vowel, data = sh)
+summary(sm_dummy)
+```
+
+Why this model is different from the previous one? Now the coefficient of `f2` is positive! So, if we consider grouping, the effect of the second formant is not definitely negative. Moreover, it is insignificant. Hence, the predicted (average) value of the first formant mainly depends on the vowel group.
+
+The equation of this model is the following:
+
+$$
+\text{f1} = 477.30 + 0.07 \times \text{f2} + 137.78 \times \text{vowelA} - 121.63 \times \text{vowely}
+$$
+The factor variable `vowel` is split in a set of dummy variables:
+
+* `vowela`: 1 if the word contains the first type vowel, 0 otherwise;
+* `vowelA`: 1 if the word contains the second type vowel, 0 otherwise;
+* `vowely`: 1 if the word contains the third type vowel, 0 otherwise.
+
+Why do we have only two groups of vowels? The first one is taken as a base category and ommited (it usually happens so the model can be estimated). A base category is a reference group, one we compare other groups with. Thus, judging by equation, we can say that: 1) the average value of `f1` is higher by 137.78 for cases with `vowelA` type of vowel than for cases with `vowela` type of vowel; 2) the average value of `f1` is lower by 121.63 for cases with `vowely` type of vowel than for cases with `vowela` type of vowel.
+
+Now let us fit a new type of a model, a linear mixed-effects model with a random effect on the intercept for groups based on vowel type. So as to do this, we will need the library `lme4`, let's install it.
+
+```{r, eval = FALSE}
+install.packages("lme4")
+```
+
+Fit a model:
+
+```{r, message=FALSE, warning=FALSE}
+library(lme4)
+me <- lmer(f1 ~ f2 + (1|vowel), data=sh, REML = FALSE)
+```
+
+Notes: 
+
+1. We add a random effect on the intercept for different vowel type, so we write `(1|vowel)`. Such a syntax with pipes (`|`) is usually used in mixed-effects models in R.
+
+2. We could safely skip the option `REML = FALSE`. There are two basic methods of estimating mixed-effects models in R, maximum likelihood method (ML) and restricted maximum likelihood method (REML). REML is used by default as a more general one, but we can turn it off and use a simple ML method, especially if our groups are balanced (approx. of the same size).
+
+Get the summary of this model:
+
+```{r}
+summary(me)
+```
+**Interpretation:**
+
+1. First, we see some measures of model quality, for example, Akaike information criterion (AIC) and Bayesian information criterion (BIC). It is useless to interpret the AIC as is, we can only compare AICs of two models and choose one that has a lower AIC (if it is substantially correct, of course).
+
+2. Then, we have some statistics on the random effects we added. There is the variance of the intercept and the variance of residuals. We can calculate the share of variance that is explained by random effects on groups:
+
+$$
+\text{ICC} = \frac{11103}{11103 + 2777} = 0.799
+$$
+This measure is called *intraclass correlation (ICC)* and shows whether the random effects we added on groups are really needed. In other words, how much of the variance of the dependent variable is expained by grouping. If ICC is very close to zero, it means that random effects are not really needed, we can safely use a more simple, an ordinary regression model. In our case this share is high, so it is sensible to use different intercepts for different groups in our model.
+
+We can also calculate ICC using the `icc()` function from the `sjstats` library:
+
+```{r, message=FALSE, warning=FALSE}
+library(sjstats)
+icc(me) # the same
+```
+
+3. Coefficients from the *Fixed effects* part can be used as ordinary coefficients of independent variables in linear models. They are computed taking into account the differences between groups, so the coefficient of `f2` is not drastically different from one from the model with dummy variables for vowel types above, but different from one from the very first simple model.
+
+We can write an equation of this model:
+
+$$
+\text{f1} = 492.60 + 0.06  \times \text{f2}
+$$
+Now let's visualise the results and add a regression line for each group of vowels to the scatter plot:
+
+```{r}
+ggplot(data = sh, aes(x = f2, y = f1, color = vowel)) + geom_point() +
+  geom_smooth(method=lm)
+```
+
+As we see, slopes are approximately the same, but intercepts are different.

@@ -1,0 +1,87 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Let us load data on a phonological research (Clarett, 2017):
+
+```{r}
+df <- read.csv("http://math-info.hse.ru/f/2018-19/ling-data/icelandic.csv")
+```
+
+The research is dedicated to the relationship between vowel duration in Icelandic language and phonological features of following consonants. Five native speakers were asked to read some texts aloud, their speech was recorded and then the duration of different sounds was measured.
+
+**Key variables:**
+
+* ``
+* ``
+* ``
+* ``
+* ``
+* ``
+* ``
+* ``
+
+Why Icelandic language? In this language we can observe the aspiration effect: vowel duration is different for cases when 
+
+```{r}
+# general boxplot
+boxplot(df$vowel.dur)
+```
+
+```{r}
+# number of outliers
+length(boxplot(df$vowel.dur)$out)
+```
+
+```{r}
+table(df$apriration)
+```
+
+```{r}
+# choose two subsamples
+asp <- df[df$aspiration == 'yes',]
+nasp <- df[df$apriration == 'no',]
+```
+
+```{r}
+# summary for aspirated and non-aspirated cases
+summary(asp$vowel.dur)
+summary(nasp$vowel.dur)
+```
+
+```{r}
+# boxplot for groups
+boxplot(df$vowel.dur ~ df$aspriration)
+```
+
+```{r}
+# more interesting - boxplot for all groups
+boxplot(df$vowel.dur ~ df$cons1)
+```
+
+```{r}
+# correct - make sure we work with the same type of a consonant
+asp <- df[df$aspiration == 'yes' & df$height == 'mid', ]
+nasp <- df[df$aspiration == 'no' & df$height == 'mid', ]
+```
+
+```{r}
+# again summary for a corrected case
+summary(asp$vowel.dur)
+summary(nasp$vowel.dur)
+
+nrow(asp)
+nrow(nasp)
+```
+
+```{r}
+# formal testing
+t.test(asp$vowel.dur, nasp$vowel.dur)
+```
+
+```{r}
+# H1: mu_aps < mu_nasp
+t.test(asp$vowel.dur, nasp$vowel.dur, alternative = "less")
+```
+

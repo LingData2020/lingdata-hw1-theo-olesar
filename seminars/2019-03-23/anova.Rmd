@@ -1,0 +1,80 @@
+---
+title: 'Linguistic Data: Quantitative Analysis and Visualisation'
+author: "Ilya Schurov, Olga Lyashevskaya, George Moroz, Alla Tambovtseva"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Part 1. ANOVA: Analysis of Variance
+
+Let's load data on Icelandic we worked before:
+
+```{r}
+phono <- read.csv("http://math-info.hse.ru/f/2018-19/ling-data/icelandic.csv")
+```
+
+When we discussed this data frame the first time, we compared the vowel duration for cases when vowels are followed by aspirated and non-aspirated consonants. So, we had two groups to compare. Now we will try to compare more groups.
+
+Look at all groups of consonants:
+
+```{r}
+table(phono$cons1)
+```
+
+Create a boxplot for vowel duration for each group of consonants (and revise `ggplot()` as well):
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+ggplot(data = phono, aes(x = cons1, y = vowel.dur)) + geom_boxplot()
+```
+
+As we can see, the median values (and the shape of the distributions as well) are different for different groups of consonants.
+
+Now let's perform ANOVA (Analysis of Variance). Formulate hypotheses:
+
+$$
+H_0: \mu_1 = \mu_2 = \dots = \mu_k \text{  (there are no difference in population means)}
+$$
+$$
+H_1: \text{there exists at least one pair of groups with different population means}
+$$
+Run ANOVA (the syntax is `variable of interest ~ grouping variable`):
+
+```{r}
+res <- aov(phono$vowel.dur ~ phono$cons1)
+res
+```
+
+More informative summary:
+
+```{r}
+summary(res)
+```
+
+**Question:** judging by the output above, can we conclude that average vowel duration differ significantly in different groups of consonants?
+
+**Answer:** yes, we can, judging by p-value that is close to zero. Null hypothesis should be rejected.
+
+## Part 2: Multiple comparisons and Bonferroni correction
+
+During the lecture we discussed a problem of multiple comparisons and concluded that it is not correct to compare groups pairwise (as is) if we have more than two groups to compare. We should either use ANOVA (or its non-parametric analogues) or perform multiple comparisons with corrections. 
+Let's compare the vowel duration for each pair of vowel types using a t-test with no corrections:
+
+```{r}
+# g - grouping variable
+# p.adjust.method - adjustment
+pairwise.t.test(phono$vowel.dur, 
+                g = phono$cons1, 
+                p.adjust.method = "none")
+```
+
+Here we have a table that contains p-values for two-sample t-tests applied for every pair of groups (vowel types). For example, p-value for the t-test comparing mean values of aspirated (`asp`) and fricative (`fri) vowels is 0.0085.
+
+Now let's do the same comparisons, but with the Bonferroni correction. 
+
+```{r}
+pairwise.t.test(phono$vowel.dur, g = phono$cons1, p.adjust.method = "bonferroni")
+```
+
+What happened when we applied this correction? P-values became larger! What does it show? We discussed that the Bonferroni correction helps us to reduce the Type I error while perfoming multiple comparisons. Type I error is the probability of rejecting the null hypothesis when it is actually true. Here p-values are larger, so we have less chances to reject $H_0$ for each pair of vowel types. 

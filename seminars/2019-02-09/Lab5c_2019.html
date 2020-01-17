@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Confidence intervals in R. ANOVA</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Alla Tambovtseva, Olga Lyashevskaya, Ilya Schurov, gRik Moroz" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Confidence intervals in R. ANOVA
+### Alla Tambovtseva, Olga Lyashevskaya, Ilya Schurov, g<code>R</code>ik Moroz
+### 09-02-2019
+
+---
+
+
+&lt;!---
+date: "09-02-2019 (updated: 2019-02-10)"
+output:
+  html_document:
+    df_print: paged 
+output:
+  slidy_presentation
+
+  
+remotes::install_github('rstudio/pagedown')
+pagedown::chrome_print('any-file.html')  
+or
+xaringan::decktape('any-file.html', 'any-file.pdf')
+---&gt;
+
+
+
+### Confidence intervals in R
+
+Install library `DescTools` and load it:
+
+
+```r
+# install.packages("DescTools")
+```
+
+
+```r
+library(DescTools)
+```
+
+Functions that we will use today:  
+
+* BinomCI -- binomial CI  
+* MeanCI -- CI for mean values  
+* MeanDiffCI -- CI for the difference in means  
+
+---
+### Confidence intervals for proportions
+
+First, let us consider an abstract example so as to look at different effects connected with confidence intervals (sample size effect and confidence level effect). Suppose we tossed a coin 20 times and got 4 heads. 
+
+
+```r
+nheads &lt;- 4 # number of heads
+n1 &lt;- 20  # total number of tosses
+```
+
+--
+Now let's calculate a 95% confidence interval for the proportion of heads in such an experiment.
+
+
+```r
+BinomCI(nheads, n1) # 95% by default
+```
+
+```
+##      est     lwr.ci    upr.ci
+## [1,] 0.2 0.08065766 0.4160174
+```
+
+---
+Calculate the length of a confidence interval: 
+
+
+```r
+ci.95 &lt;- BinomCI(nheads, n1)
+ci.95[3] - ci.95[2]
+```
+
+```
+## [1] 0.3353598
+```
+
+--
+Increase the number of tosses (number of heads remains the same):
+
+
+```r
+n2 &lt;- 40 # now 40 tosses
+ci.95.2 &lt;- BinomCI(nheads, n2)
+ci.95.2[3] - ci.95.2[2]  
+```
+
+```
+## [1] 0.1909382
+```
+
+--
+It shrinked, right?  
+
+
+--
+Keep the number of tosses equal to 20, but increase the confidence level:
+
+
+```r
+ci.99 &lt;- BinomCI(nheads, n1, conf.level = 0.99)
+ci.99[3] - ci.99[2] 
+```
+
+```
+## [1] 0.4263411
+```
+
+--
+It extended.  
+
+
+---
+Let’s set a true probability of getting a head in one toss of a coin.
+
+```r
+p0 &lt;- 0.5 # true probability of getting a head in one tossing
+```
+
+Then take 1000 samples of size 100, calculate confidence intervals for proportion of ones in each sample and count how many intervals contain a population proportion (the true probability of getting a head in one toss of a coin).  
+Recall the code from our previous seminars and suppose we asked 1000 people to toss a coin 100 times and report the proportion of heads they obtained.
+
+
+```r
+n &lt;- 100
+samples &lt;- 1000
+dat &lt;- matrix(sample(c(0, 1), 
+                     n * samples, 
+                     replace=TRUE), ncol=n, byrow=TRUE)
+```
+
+--
+
+```r
+cis &lt;- BinomCI(rowSums(dat), n)
+colnames(cis) &lt;- c("est", "lower", "upper")
+
+head(cis[,"lower"])
+```
+
+```
+##       x.1       x.2       x.3       x.4       x.5       x.6 
+## 0.3751082 0.3373330 0.4231658 0.4622810 0.4038315 0.3846455
+```
+
+```r
+head(cis[,"upper"])
+```
+
+```
+##       x.1       x.2       x.3       x.4       x.5       x.6 
+## 0.5671114 0.5278461 0.6153545 0.6532797 0.5961685 0.5768342
+```
+
+```r
+sum(cis[,2] &lt;= p0 &amp; cis[,3] &gt;= p0)
+```
+
+```
+## [1] 938
+```
+
+```r
+sum(cis[,2] &lt;= p0 &amp; cis[,3] &gt;= p0)/1000
+```
+
+```
+## [1] 0.938
+```
+
+
+---
+### Confidence intervals: real data
+
+Now let's proceed to real data and work with *Verses* data set. 
+
+
+```r
+verses &lt;- read.csv("https://raw.githubusercontent.com/LingData2019/LingData/master/data/poetry_last_in_lines.csv", sep = "\t")
+str(verses) # recall which variables are there
+```
+
+```
+## 'data.frame':	364 obs. of  6 variables:
+##  $ Decade      : Factor w/ 2 levels "1820s","1920s": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ RhymedNwords: int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ RhymedNsyl  : int  1 1 1 1 1 1 1 2 2 2 ...
+##  $ UPoS        : Factor w/ 11 levels "ADJ","ADP","ADV",..: 6 6 6 6 9 9 9 1 1 1 ...
+##  $ LineText    : Factor w/ 364 levels "-- Воронский, Воронский в подряснике старом,",..: 7 37 64 173 179 276 311 60 67 210 ...
+##  $ Author      : Factor w/ 364 levels "А. А. Ахматова",..: 97 202 122 299 61 149 6 24 219 209 ...
+```
+
+--
+Calculate a confidence interval for the proportion of nouns at the end of lines:
+
+
+```r
+nnouns &lt;- nrow(verses[verses$UPoS == "NOUN", ])
+total &lt;- nrow(verses)
+
+BinomCI(nnouns, total)
+```
+
+```
+##            est    lwr.ci    upr.ci
+## [1,] 0.6098901 0.5588825 0.6586025
+```
+
+---
+### Confidence intervals for means
+
+Now let's turn to the data set on Icelandic language from our previuos class.
+
+
+```r
+phono &lt;- read.csv("http://math-info.hse.ru/f/2018-19/ling-data/icelandic.csv")
+```
+
+--
+Choose aspirated and non-aspirated cases again:
+
+
+```r
+asp &lt;- phono[phono$aspiration == "yes", ]
+nasp &lt;- phono[phono$aspiration == "no", ]
+```
+
+--
+Calculate confidence intervals for mean values of vowel duration in each group:
+
+
+```r
+MeanCI(asp$vowel.dur)
+```
+
+```
+##     mean   lwr.ci   upr.ci 
+## 78.75772 76.68274 80.83270
+```
+
+```r
+MeanCI(nasp$vowel.dur)
+```
+
+```
+##     mean   lwr.ci   upr.ci 
+## 94.69124 92.15292 97.22957
+```
+
+---
+Plot them using `sciplot`:
+
+
+```r
+# install.packages("sciplot")
+library(sciplot)
+lineplot.CI(data = phono, 
+            response = vowel.dur, 
+            x.factor = aspiration)
+```
+
+![](Lab5_2019_files/figure-html/unnamed-chunk-16-1.png)&lt;!-- --&gt;
+
+---
+### Confidence intervals and significance of differences
+
+* If two CI's for a population parameter (proportion, mean, median, etc) do not overlap, it means that true values of population parameters are significantly different.
+
+* If two CI's for a population parameter overlap, true values of population parameters can (to be equal to each other), but **not** necessarily do so. For example, if two confidence intervals for means overlap, we cannot make a definite conclusion, more accurate testing is required (t-test). So, in general, comparison of confidence intervals (with the same confidence level, of course) is **not** equivalent to hypotheses testing.  
+
+
+--
+Consider a case when two CI's for means overlap, but population means are significantly different. Let's select only cases with aspirated consonants and compare the average vowel duration for round and unrounded vowels.  
+
+
+```r
+w1 &lt;- phono[phono$aspiration == 'yes' &amp; phono$roundness == "round", ]
+w2 &lt;- phono[phono$aspiration == 'yes' &amp; phono$roundness == "unrounded", ]
+```
+
+---
+Do CI's overlap?
+
+
+```r
+MeanCI(w1$vowel.dur)
+```
+
+```
+##     mean   lwr.ci   upr.ci 
+## 81.74052 77.89567 85.58537
+```
+
+```r
+MeanCI(w2$vowel.dur)
+```
+
+```
+##     mean   lwr.ci   upr.ci 
+## 76.90839 74.54499 79.27179
+```
+
+Can we conclude that mean vowel duration is different for round and unrounded vowels? 
+
+---
+### T-test 
+Perform a statistical test, a two sample Student's t-test.
+
+
+```r
+# reject or not reject H0
+t.test(w1$vowel.dur, w2$vowel.dur)
+```
+
+```
+## 
+## 	Welch Two Sample t-test
+## 
+## data:  w1$vowel.dur and w2$vowel.dur
+## t = 2.1134, df = 269.27, p-value = 0.03549
+## alternative hypothesis: true difference in means is not equal to 0
+## 95 percent confidence interval:
+##  0.3304964 9.3337590
+## sample estimates:
+## mean of x mean of y 
+##  81.74052  76.90839
+```
+
+--
+Null hypotheses should be rejected, so population means are different. 
+
+
+--
+Actually, testing hypothesis about the equality of population means is equivalent to finding whether *a CI for the difference of means* includes zero. 
+
+
+```r
+# CI for difference between means
+MeanDiffCI(w1$vowel.dur, w2$vowel.dur)
+```
+
+```
+##  meandiff    lwr.ci    upr.ci 
+## 4.8321277 0.3304964 9.3337590
+```
+
+--
+Thus, intersection of CI's for means (or for any population parameters) `\(\ne\)` CI for the difference includes zero `\(\ne\)` `\(H_0\)` about equality should not be rejected.
+
+---
+### ANOVA
+
+Load data on Icelandic:
+
+
+```r
+phono &lt;- read.csv("http://math-info.hse.ru/f/2018-19/ling-data/icelandic.csv")
+```
+
+
+```r
+str(phono)
+```
+
+```
+## 'data.frame':	806 obs. of  31 variables:
+##  $ speaker        : Factor w/ 5 levels "brs02","bte03",..: 1 1 1 2 2 2 3 3 3 4 ...
+##  $ index          : int  137 138 139 15 16 17 4 5 6 113 ...
+##  $ word           : Factor w/ 58 levels "detta","dögg",..: 29 29 29 29 29 29 29 29 29 29 ...
+##  $ time           : num  438 441 443 133 138 ...
+##  $ word.dur       : num  489 444 450 530 515 ...
+##  $ voicing.dur    : num  153.2 138.7 169.8 93.6 159.3 ...
+##  $ vowel.dur      : num  100.9 72.6 107.5 93 107.4 ...
+##  $ cluster.dur    : num  231 217 195 245 230 ...
+##  $ spreading.dur  : num  114.3 98.2 50.1 119.2 45.1 ...
+##  $ sonorant.dur   : num  167 164 112 120 97 ...
+##  $ closure.dur    : num  64.7 52.7 82.3 125.3 133.2 ...
+##  $ vor            : num  332 290 302 338 338 ...
+##  $ voffr          : num  179 151 132 244 178 ...
+##  $ mor            : num  231 217 195 245 230 ...
+##  $ cond_no        : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ ipa            : Factor w/ 58 levels "celta","cel̥ta",..: 26 26 26 26 26 26 26 26 26 26 ...
+##  $ cons1          : Factor w/ 6 levels "asp","fri","nasp",..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ vowel          : Factor w/ 10 levels "a","ai","e","ei",..: 7 7 7 7 7 7 7 7 7 7 ...
+##  $ height         : Factor w/ 4 levels "diph","high",..: 4 4 4 4 4 4 4 4 4 4 ...
+##  $ anteroposterior: Factor w/ 2 levels "back","front": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ roundness      : Factor w/ 2 levels "round","unrounded": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ consonant      : Factor w/ 18 levels "ʰk","ʰp","ʰt",..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ manner         : Factor w/ 5 levels "geminate","lateral",..: 5 5 5 5 5 5 5 5 5 5 ...
+##  $ place          : Factor w/ 3 levels "coronal","labial",..: 3 3 3 3 3 3 3 3 3 3 ...
+##  $ aspiration     : Factor w/ 2 levels "no","yes": 2 2 2 2 2 2 2 2 2 2 ...
+##  $ syllables      : Factor w/ 2 levels "di","mono": 2 2 2 2 2 2 2 2 2 2 ...
+##  $ syl_structure  : Factor w/ 12 levels "ccvvccv","cvcc",..: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ gloss          : Factor w/ 47 levels "arm","avenge",..: 13 13 13 13 13 13 13 13 13 13 ...
+##  $ pos            : Factor w/ 4 levels "adj","adv","n",..: 3 3 3 3 3 3 3 3 3 3 ...
+##  $ comp           : Factor w/ 2 levels "c","x": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ contx          : Factor w/ 2 levels "cc","cx": 1 1 1 1 1 1 1 1 1 1 ...
+```
+
+Look at the groups of consonants:
+
+
+```r
+table(phono$cons1)
+```
+
+```
+## 
+##  asp  fri nasp   no  vls  voi 
+##  304   15  133   94  142  118
+```
+
+
+```r
+require(tidyverse)
+```
+
+
+```r
+phono %&gt;% # dplyr style
+  select(cons1) %&gt;% 
+  group_by(cons1) %&gt;% 
+  count()
+```
+
+```
+## # A tibble: 6 x 2
+## # Groups:   cons1 [6]
+##   cons1     n
+##   &lt;fct&gt; &lt;int&gt;
+## 1 asp     304
+## 2 fri      15
+## 3 nasp    133
+## 4 no       94
+## 5 vls     142
+## 6 voi     118
+```
+
+---
+Create a boxplot for vowel duration for each group of consonants:
+
+
+```r
+boxplot(phono$vowel.dur ~ phono$cons1) 
+```
+
+![](Lab5_2019_files/figure-html/unnamed-chunk-26-1.png)&lt;!-- --&gt;
+
+---
+Perform ANOVA to find out if the variation between groups is significantly larger than the variation within groups:
+
+
+```r
+res &lt;- aov(phono$vowel.dur ~ phono$cons1)
+res
+```
+
+```
+## Call:
+##    aov(formula = phono$vowel.dur ~ phono$cons1)
+## 
+## Terms:
+##                 phono$cons1 Residuals
+## Sum of Squares      96776.3  404073.9
+## Deg. of Freedom           5       800
+## 
+## Residual standard error: 22.47426
+## Estimated effects may be unbalanced
+```
+
+This type of ANOVA is called a one-way ANOVA for independent groups.
+
+--
+More informative summary:
+
+
+```r
+# H0: there are no difference in population means by groups
+summary(res)
+```
+
+```
+##              Df Sum Sq Mean Sq F value Pr(&gt;F)    
+## phono$cons1   5  96776   19355   38.32 &lt;2e-16 ***
+## Residuals   800 404074     505                   
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+
+---
+ANOVA with multiple groups:
+
+
+```r
+res &lt;- aov(phono$vowel.dur ~ phono$cons1 + phono$roundness)
+res
+```
+
+```
+## Call:
+##    aov(formula = phono$vowel.dur ~ phono$cons1 + phono$roundness)
+## 
+## Terms:
+##                 phono$cons1 phono$roundness Residuals
+## Sum of Squares      96776.3          2037.5  402036.4
+## Deg. of Freedom           5               1       799
+## 
+## Residual standard error: 22.43155
+## Estimated effects may be unbalanced
+```
+
+--
+More informative summary:
+
+
+```r
+# H0: there are no difference in population means by groups
+summary(res)
+```
+
+```
+##                  Df Sum Sq Mean Sq F value Pr(&gt;F)    
+## phono$cons1       5  96776   19355  38.466 &lt;2e-16 ***
+## phono$roundness   1   2037    2037   4.049 0.0445 *  
+## Residuals       799 402036     503                   
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+
+---
+Create a boxplot for vowel duration for each group of consonants and for both groups of roundness:
+
+
+```r
+boxplot(phono[phono$roundness == "round",]$vowel.dur ~ phono[phono$roundness == "round",]$cons1)
+```
+
+![](Lab5_2019_files/figure-html/unnamed-chunk-31-1.png)&lt;!-- --&gt;
+
+---
+Create a boxplot for vowel duration for each group of consonants and for both groups of roundness:
+
+
+```r
+boxplot(phono[phono$roundness == "unrounded",]$vowel.dur ~ phono[phono$roundness == "unrounded",]$cons1) 
+```
+
+![](Lab5_2019_files/figure-html/unnamed-chunk-32-1.png)&lt;!-- --&gt;
+
+---
+Plot all groups together:
+
+
+```r
+boxplot(phono$vowel.dur ~ phono$cons1 + phono$roundness)
+```
+
+![](Lab5_2019_files/figure-html/unnamed-chunk-33-1.png)&lt;!-- --&gt;
+
+---
+Create a boxplot for vowel duration for each group of consonants and for both groups of roundness:
+
+
+```r
+boxplot(phono[phono$roundness == "unrounded",]$vowel.dur ~ phono[phono$roundness == "unrounded",]$cons1) 
+```
+
+![](Lab5_2019_files/figure-html/unnamed-chunk-34-1.png)&lt;!-- --&gt;
+
+---
+Create the same boxplot with ggplot2
+
+
+```r
+ggplot(data = phono, # add the data
+       aes(x = cons1, y = vowel.dur, # set x, y coordinates
+           color = cons1)) +    # color by cons1
+  geom_boxplot() +
+  facet_grid(~roundness) # create panes base on health status
+```
+
+![](Lab5_2019_files/figure-html/unnamed-chunk-35-1.png)&lt;!-- --&gt;
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+---
+title: "Homework 2"
+subtitle: 'Linguistic Data: Quantitative Analysis and Visualisation'
+author: "Ilya Schurov, Olga Lyashevskaya, George Moroz, Alla Tambovtseva"
+date: "Deadline: 03 February 2019"
+output: pdf_document
+header-includes:
+  - \usepackage{hyperref}
+  - \hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=blue}
+---
+
+For some homeworks we use parts of online courses from Datacamp. For participation you need to fill in this [google form](https://goo.gl/forms/ZvBrI96U4n2hOuFX2). Then you will receive an invitation to Datacamp.
+
+For Homework 2, please, complete the following chapters of the course ["Introduction to R"](https://www.datacamp.com/courses/free-introduction-to-r):
+
+* Vectors (Chapter 2, all assignments)
+* Factors (Chapter 4, all assignments before *Battle of sexes*)
+* Data Frames (Chapter 5, all assignments before *Only planets with rings that are shorter*)
+
+Please send the progress of the online course (a screenshot where your name/login/email is readable) to the [course assistant](mailto:irina.nikishina@mail.ru) until 23:59 03.02.2019.
+
+Feel free to ask any questions concerning tasks and Datacamp interface.

@@ -1,0 +1,99 @@
+---
+title: "R Notebook: 26-01"
+output: html_notebook
+---
+Create a matrix 2 * 3 consisting of 0: 
+
+```{r}
+matrix(0, nrow=2, ncol=3)
+```
+
+Arrange a vector of 12 values into matrix 3 * 4 arrange by rows:
+
+```{r}
+v <- 1:12
+m <- matrix(v, n=3, ncol=4, byrow = TRUE)
+m
+```
+
+Sum of every row in a matrix:
+
+```{r}
+rowSums(m)
+```
+
+Recall: how to create a sample of 0 and 1 of size 10.
+
+```{r}
+sample(c(0, 1), 10, replace = TRUE)
+```
+
+Experiment from the lecture: toss a coin 10 times and repeat this sequence 10000 times:
+
+```{r}
+tosses <- 10
+samples <- 10000
+dat <- matrix(sample(c(0, 1), tosses * samples, replace=TRUE), ncol=tosses, byrow=TRUE)
+```
+
+Calculate `phats` - proportions of heads in each experiment:
+
+```{r}
+pbar <- rowSums(dat) / tosses
+hist(pbar, breaks=tosses, xlim=c(0, 1))
+```
+
+Test $H_0: p = 0.5$:
+
+```{r}
+binom.test(3, 10, p=0.5) # 3 out of 10 - a fair coin?
+binom.test(2, 10)  # 2 out of 10 - a fair coin?
+binom.test(1, 10)  # 1 out of 10 - a fair coin?
+```
+
+Load some dataset and check some null hypothesis with binomial test.
+
+```{r}
+df <- read.csv("https://raw.githubusercontent.com/LingData2019/LingData/master/seminars/26-01/poetry_last_in_lines.csv", sep = "\t")
+```
+
+Suggest your hypotheses about p of nouns. Look at frequencies:
+
+```{r}
+table(df$UPoS)
+table(df$UPoS)/sum(table(df$UPoS))
+```
+
+Is it enough to make conclusions? No, proceed to formal tests:
+
+```{r}
+# select lines with nouns
+nouns <- df[df$UPoS=='NOUN',]
+total <- nrow(df) # number of trials
+nnouns <- nrow(nouns) # number of successes
+```
+
+```{r}
+# H0: p = 0.6
+binom.test(nnoun, total, p = 0.6)
+# not reject (correct)
+# not reject != accept != H0 holds
+```
+
+```{r}
+# H0: p = 0.4
+binom.test(nnouns, total, 0.4) # p=0.4
+```
+
+```{r}
+# choose lines with one-syllable words at the end
+one_syll <- df[df$RhymedNsyl == 1, ]
+nrow(one_syll)
+nrow(one_syll[one_syll$UPoS == "NOUN", ])
+binom.test(32, 43, p=0.6)
+```
+
+```{r}
+# you can test on your own for every number of syllables
+table(df$RhymedNsyl)
+```

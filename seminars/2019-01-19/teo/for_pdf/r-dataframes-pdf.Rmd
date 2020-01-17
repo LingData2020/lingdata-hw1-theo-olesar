@@ -1,0 +1,230 @@
+---
+title: 'Linguistic Data: Quantitative Analysis and Visualisation'
+author: "Ilya Schurov, Olga Lyashevskaya, George Moroz, Alla Tambovtseva"
+date: "19 January 2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Working with data frames
+
+### Data loading
+
+Now we will work with a csv-file. CSV stands for *comma separated values*, so it is a text file where columns are separated with a comma, like this:
+
+```
+a,b,c
+1,5,2
+0,4,3
+```
+
+At first, we will load a csv-file via a link. To do this we need the function `read.csv()`. And then we put the link into brackets (don't forget quotes):
+
+```{r}
+dat <- read.csv("http://math-info.hse.ru/f/2018-19/ling-data/Chi.kuk.2007.csv")
+```
+
+Of course, in real life we do not have such links and load data from our laptops. So as not to spend more time on discussing working directories and writing paths to files, let's consider an interative function `file.choose()` that will ask to choose a file from a folder:
+
+```{r, eval=FALSE}
+dat2 <- read.csv(file.choose())
+```
+
+So, it works like many other programs that suggest us to choose a file for working. 
+
+Look at our data in a convenient way:
+
+```{r, eval=FALSE}
+View(dat)
+```
+
+This file contains data on the following research (description is taken from [here](https://agricolamz.github.io/2018-MAG_R_course/Lec_3_tidyverse.html#4_dplyr)). 
+
+The majority of examples in that presentation are based on Hau 2007. Experiment consisted of a perception and judgment test aimed at measuring the correlation between acoustic cues and perceived sexual orientation. Naïve Cantonese speakers were asked to listen to the Cantonese speech samples collected in Experiment and judge whether the speakers were gay or heterosexual. There are 14 speakers and following parameters:
+
+* [s] duration (`s.duration.ms`)
+* vowel duration (`vowel.duration.ms`)
+* fundamental frequencies mean (F0) (`average.f0.Hz`)
+* fundamental frequencies range (`f0.range.Hz`)
+* percentage of homosexual impression (`perceived.as.homo`)
+* percentage of heterosexal impression (`perceived.as.hetero`)
+* speakers orientation (`orientation`)
+* speakers age (`age`)
+
+### General information about data frames
+
+When data are loaded, we can look at general info using `str()` function:
+
+```{r}
+str(dat)
+```
+
+This function is very helpful since it returns a lot of information at the same time: number of observations (rows), number of variables (columns), names of all columns, their types and first values in each column.
+
+To get descriptive statisitics for all columns, we will need `summary()` function:
+
+```{r}
+summary(dat)
+```
+
+For numeric columns it returns descriptive statistics, for character or factor ones it returns absolute frequencies.
+
+To get the number of observations in a data frame, we can use `nrow()` function:
+
+```{r}
+nrow(dat)
+```
+
+### Selection of columns and rows 
+
+Let's choose a column by its name. Take `age`, for example:
+
+```{r}
+# $ and then the name of a column
+dat$age
+```
+
+Then we can work with a separate column and R will treat it as a vector:
+
+```{r}
+# summary of a column
+summary(dat$age)
+```
+
+```{r}
+# average age
+mean(dat$age)
+```
+
+```{r}
+# histogram for a column
+hist(dat$age, col="red")
+```
+
+Now let's see how to choose rows and columns by their index (position in a data frame). As a data frame is a table with rows and columns, to choose a certain cell from this table we have to specify the row number and the column number. In R row numbers usually go first:
+
+```{r}
+# 1st row, 2nd column
+dat[1, 2]  # 1st speaker, 2nd column - s.duration.ms
+```
+
+So as to select the 1st row and all the columns, so, all the characteristics of the 1st speaker, we should leave the second position blank:
+
+```{r}
+dat[1,]  # type nothing after ,
+```
+
+The same can be done for columns:
+
+```{r}
+# all rows, only the 3rd column
+dat[,3]
+```
+
+### Filtering
+
+Of course, in practice we often have to filter our data based on some conditions rather than choose specific columns or rows by their indices. The logics of filtering rows of a data frame is the same as in vectors: we have to write the condition in square brackets. 
+
+```{r}
+# take all speakers older than 32 year old
+dat[dat$age > 32,]
+```
+
+However, now we should not forget that our condition is tested for rows, so it should be placed before a comma. If we miss this comma, we will get incorrect results:
+
+```{r}
+# all the speakers, of any age!
+dat[dat$age > 32]
+```
+
+We can test multiple conditions at the same time. For example, let's choose speakers older than 20 year old that are homosexual:
+
+```{r}
+# & - at the same time
+dat[dat$age > 20 & dat$orientation == "homo",]
+```
+
+Again to join these conditions we use `&` that stands for *simultaneously true* (recall working with vectors). Now let's calculate how many homosexuals older than 20 are in our data frame: 
+
+```{r}
+nrow(dat[dat$age > 20 & dat$orientation == "homo",])
+```
+
+To do this, we use `nrow()` function. Why we do not need `length()`? 
+
+```{r}
+length(dat[dat$age > 20 & dat$orientation == "homo",])
+```
+
+As R treats any data frame as a vector of vectors, `length()` function returns number of elements, so number of vectors in the data frame. Any column is a vector, so we obtain 10 here that is the number of columns.
+
+As we have seen, looking at data that appear in the console is not convenient. So, we can save a subset of a data frame in a variable and then use `View()` to see it in a separate tab:
+
+```{r, eval=FALSE}
+dat_small <- dat[dat$age > 20 & dat$orientation == "homo",]
+View(dat_small)
+```
+
+Now let's suggest criteria you are interested in and we will choose speakers that satisfy these criteria.
+
+### Suggestion 1
+
+Choose homosexuals that are mostly perceived as homosexuals. 
+
+Note: we decided that *mostly perceived as homosexulas* are speakers with the proportion of listeners assigned them to homosexuals is more than 0.5. 
+
+```{r, eval=FALSE}
+homo <- dat[dat$perceived.as.homo.percent > 0.5 & 
+      dat$orientation == "homo",]
+View(homo)
+```
+
+Now let's calculate the percentage of homosexuals perceived as homosexuals.
+
+```{r, echo=FALSE}
+homo <- dat[dat$perceived.as.homo.percent > 0.5 & 
+      dat$orientation == "homo",]
+```
+
+```{r}
+nrow(homo)/nrow(dat) * 100
+```
+
+### Suggestion 2
+
+Choose speakers who are mostly perceived as homosexuals with either the intonation greater than the average or with vowel duration greater than the average.
+
+First, to avoid overloading, we can calculate the average of vowel duration and the average of intonation (`f0`):
+
+```{r}
+# save
+mean_duration <- mean(dat$vowel.duration.ms)
+mean_intonation <- mean(dat$average.f0.Hz)
+```
+
+Then we can choose rows needed:
+
+```{r}
+homo2 <- dat[(dat$vowel.duration.ms > mean_duration | 
+      dat$average.f0.Hz > mean_intonation) &
+      dat$perceived.as.homo.percent > 0.5, ]
+nrow(homo2)
+```
+
+Note: the structure of our conditions is the following: `(cond1 | cond2) & cond3`. So, `cond3` should be true all the time (choose only homosexuals) while between `cond1` and `cond2` at least one should be true. In other words, our filter captures the following situations:
+
+* homosexuals that have vowel duration greater than the average duration
+* homosexuals that have intonation greater than the average intonation
+* homosexuals that have both vowel duration and intonation greater than the average.
+
+One more crucial point: brackets `()` here are compulsory; without them we will get a different condition, like this: `cond1 | (cond2 & cond3)`. This is because operator `&` is stronger.
+
+### Suggestion 3
+
+Plot a histogram of vowel duration for speakers chosen at the previous step:
+
+```{r}
+hist(homo2$vowel.duration.ms, col="yellow")
+```
+
