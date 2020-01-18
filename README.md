@@ -1,4 +1,4 @@
-# LingData 2019
+# LingData 2020
 
 
 Course "Linguistic Data: Quantitative Analysis and Visualisation" (HSE, 2019-2020)
