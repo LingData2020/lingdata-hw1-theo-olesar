@@ -1,0 +1,80 @@
+---
+title: 'Linguistic Data: Quantitative Analysis and Visualisation'
+author: <h4 style="font-style:normal;font-weight:normal">George Moroz, Ilya Schurov, Olga Lyashevskaya</h4>
+date: <h4 style="font-weight:normal">25 January 2020</h4>
+output:
+  html_document: default
+---
+
+# `tidyverse`: Loading and transforming data {#tidy_dplyr} 
+
+[_tidyverse_](https://www.tidyverse.org) is a set of packages:
+
+* _ggplot2_, to visualise data 
+* _tibble_, to make nice views for dataframes 
+* _tidyr_, tidy data format 
+* _readr_, to read files in R 
+* _purrr_, to do functional programming 
+* _dplyr_, to transform data 
+* _stringr_, to work with strings 
+* _forcats_, to work with categorial variables 
+
+Other useful packages: 
+
+* _readxl_, to read .xls и .xlsx  
+* _jsonlite_, to work with JSON  
+* _rvest_, to do web scrapping  
+* _lubridate_, for time data  
+* _tidytext_, to work with texts and corpora  
+* _broom_, to transfer statistic models in tidy format  
+
+```{r, message = TRUE}
+library("tidyverse")
+```
+
+## Loading the data 
+### Working directory 
+
+Two functions to set up your working directory: `getwd()` and `setwd(.../path/to/your/directory)`.
+
+### `.csv` files 
+
+`.csv` (comma separated values) is the most popular file format to store the (tabular) data. 
+NB [Microsoft Excel нужны некоторые трюки](https://superuser.com/questions/291445/how-do-you-change-default-delimiter-in-the-text-import-in-excel).
+
+### Reading data: `readr`, `readxl` 
+* Basic R: `read.csv()`,
+* Tydyverse: `read_csv()` (package `readr`) 
+
+```{r, eval = FALSE}
+read_csv("...")
+```
+
+What's within brackets?
+
+* file name (please check that it exists in your working directory)
+```{r, eval = FALSE}
+read_csv("my_file.csv")
+```
+
+* relative path to the file
+```{r, eval = FALSE}
+read_csv("data/my_file.csv")
+```
+
+* full path to the file
+```{r, eval = FALSE}
+read_csv("/home/user_name/work/data/my_file.csv")
+```
+
+* URL (please check that you are connected to internet)
+```{r, eval = FALSE}
+read_csv("https://my_host/my_file.csv")
+```
+
+Other functions to read `.csv` files:
+
+* `read_tsv()` -- tab-separated files 
+* `read_csv2()` -- semicolon-separated files   
+* `read_delim(file = "...", delim = "...")` -- any separator set as `delim`
+
