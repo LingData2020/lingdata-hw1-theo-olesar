@@ -91,7 +91,7 @@ head(df)
 ### `dplyr`
 
 ```{r}
-homo <- read_csv("https://raw.githubusercontent.com/LingData2020/LingData/master/data/orientation.csv")
+homo <- read_csv("https://raw.githubusercontent.com/LingData2019/LingData2020/master/data/orientation.csv")
 homo
 ```
 The majority of examples in that presentation are based on [Hau 2007]. Experiment consisted of a perception and judgment test aimed at measuring the correlation between acoustic cues and perceived sexual orientation. Naïve Cantonese speakers were asked to listen to the Cantonese speech samples collected in Experiment and judge whether the speakers were gay or heterosexual. There are 14 speakers and following parameters:
