@@ -2,9 +2,7 @@
 .DS_Store
 .AppleDouble
 .LSOverride
-
-# Icon must end with two \r
-Icon
+.Rhistory
 
 # Thumbnails
 ._*
