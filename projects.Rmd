@@ -1,0 +1,110 @@
+---
+title: 'Research Project: Data & Analysis, Paper & Presentation'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Final Examination   
+
+MA course **Linguistic data: quantitative analysis and visualization, HSE, Moscow**.   
+
+## A Quantitative Analysis of a Linguistic Phenomenon
+
+#### Possible research tracks and topics[^1]  
+
+In the project, the students are supposed to explore a linguistic phenomenon in written, oral, or sign speech, in any natural language. This can be:  
+
+- a corpus-based study:
+    - based on a monolingual corpus
+    - based on a parallel corpus or any other bi- or multilingual source
+- experimental research:
+    - psycholinguistic, neurolinguistic experiments
+    - experimental phonetics
+    - fieldwork
+    - sociolinguistic surveys
+
+Just to give you an idea, the project can be focused on the behaviour of some rival forms such as: 
+
+- synonyms
+- two or more grammatical forms (e.g. two kinds of comparatives in Russian: _bystree_ and _pobystree_)
+- rival word formation models
+- rival syntactic constructions, word order (e.g. _give him a book_ vs. _give a book to your sister_)
+- rival pronunciation models (e.g. with or without ellision), etc.
+
+Another example could be the use of dialectal forms in urban and rural speech, or the use of a certain grammatical construction by females and males.    
+
+It is important to note that we expect you to think about not just one, but several variables that can (potentially) explain the behaviour of the linguistic unit in focus. For example, in the case of the rival units, the choice between them can be explained by certain contextual variables (e.g. the part of speech of the neighbors, syntactics patterns), features of the rival units themselves (e.g. the gender of the noun, the tense of the verb), genre and register of the text, sociolinguistic parameters (e.g. age, sex, profession, education, place of birth). We expect you to explore at least three explanatory variables of any kind in your case study. For inspiration, you can look at some examples of the data sets in the open repository [Trolling](https://opendata.uit.no/dataverse/trolling). 
+
+#### Parts of the research
+
+1. A hypothesis formulated in terms of the subject area. For example, *‘after verbs in this form, such and such a word is more often used than such and such’*. Or *‘people who grew up in the village use dialect forms more actively than those who grew up in the city’*, etc. It would be nice if there is any universal justification for why this hypothesis is plausible.
+2. Research design: what data you need to test the hypothesis, what are your formal hypotheses (statistically formulated: null hypothesis, alternative), what is your model (i.e. regression model, etc.), which statistical tools will you use, etc.
+3. Description of the data collection method.
+4. Collected data, their description.
+5. Exploratory data analysis, descriptive statistics and visualization.
+6. Results of applying statistical tests and modeling, p-values, regression coefficients, etc.
+7. The results of the study, formulated in terms of the subject area.
+
+What usually happens:
+
+During the project, you formulate your initial hypothesis, collect data, annotate data and do the preliminary descriptive, exploratory and inferential statistical analysis. After that, you update your hypothesis, include more or exclude some factors, and collect more data/annotate more parameters in order to improve the empirical basis for the analysis. The amount of the data collected should be enough to support the statistic analysis. (The rule of thumb that the size of your data set is ten times more than the number of variables).
+
+It is strongly prohibited to exclude data that contradict the hypothesis or make any other sort of the hypothesis-biased fraud.
+
+You have to demonstrate robustness (or lack of it) of your conclusions by using different models or their combinations, different specifications of the models (i.e. what variables to include in the analysis), different ways to encode data, etc.
+
+#### Research paper  
+The students prepare the final project in a written form as an electronic
+ document (Rmarkdown, also knitted as pdf) that include the following parts: 
+
+- Research objectives and hypothesis to be tested.
+- Description of input data: features and values, descriptive statistics, data visualisation.
+- Discussion of the methods of analysis and their applicability.
+- Obtained results and their linguistic interpretation. Comparison and discussion of the    results produced by different models.
+- Optional section: previous research on the topic, comparison of current results with previous studies.
+- R code used for the analysis.[^2]
+- Annotated data (file in repository in the .csv format, the paper contains a link to this file).
+- Experimental survey questionaries, if applicable (files in repository in the .csv format, the paper contains a link to this file). 
+
+Language under analysis: any natural language  
+
+Type of the project: individual or group (max. 2 people) project  
+
+Language of the project paper: English  
+
+### Data annotation  
+The students can either compile the dataset specifically for this research paper or make use of data collected for their term papers, dissertations, other research actitivities. If you use data collected and annotated by other people please indicate it in your research paper. In this case, you will have to (a) write an additional section on *previous research on the topic, comparison of current results with previous studies* or (b) do additional model testing to explore the effects of data size, missing data treatment, data sampling, custom methods within models, etc.
+
+Corpus data samples and experimental data sets are usually annotated manually. However, you can do any kind of data preprocessing and exploit ways to automate data annotation, if you wish. The quality of annotation and its interpretability will be assessed.  
+
+### Course project schedule
+
+* April 28. Research pre-registration. You have to submit preliminary version of the paper that includes first three part of the research: a hypothesis, research design and description of data collection method. This paper will be assessed and you will recieve feedback that should be addressed in the final version.
+* June 15. Final paper submission.
+* June 17-30. Oral presentation (10 min presentation, 5 min questions). Exam date to be assigned by the office.
+
+### Project paper and presentation assessment  
+* Clear statement of research questions and hypothesis in terms of the subject area: max. 50 points.
+* Research design: relevance of statistical tools used, correctness of statistical assumptions, etc.: max. 50 points.
+* Correctness of data collection method: max. 30 points.
+* Quality of data annotation: max. 30 points.
+* Data description, descriptive statistics and visualization: max. 100 points.
+* Statistical analysis: correctness of statistical tests application, statistical modelling and reporting of results: max. 100 points.
+* Linguistic interpretation of the modeling results, explanation of conflicting results obtained with different models: max. 100 points.
+* Bonus for research quality and extra materials: max. 50 points.
+* Oral presentation: max. 100 points. 
+* Penalty for late pre-registration: 50 points, late final paper submission (before the exam date): 100 points.
+
+Examination grades: 500 points or higher: 10 (‘excellent’), 200 points: 4 (‘passed’). 
+
+[Examples of project papers](https://agricolamz.github.io/2018-MAG_R_course/projects-previous-case-studies.html) (of different quality, for orientation only).
+
+[^1]: Other research methodologies can be dicussed with instructors. We are ok with the re-use of your previous research but only if it demonstrates some "added" value in terms of statistical analysis, visualization, the increment of the dataset size and variables. If you re-use some previous research, please state it clearly and explain what was done before and what is done as a part of this course project. This course paper can be done in preparation for your term paper / MA thesis. (NB for computational linguists: We usually don't accept projects that comprises purely computational linguistics/NLP research such as data retrieval or NLP evaluation. However, we encourage you to use your skills at the stage of data collection and pre-processing, if needed).
+
+[^2]: The use of language R is one of the criteria of evaluation. If you use any statistical tool other than R in your project, please discuss it with the examiner. Python, C, etc. scripts used to collect and pre-process your data can also be provided, but are not subject of evaluation.  
+ 
