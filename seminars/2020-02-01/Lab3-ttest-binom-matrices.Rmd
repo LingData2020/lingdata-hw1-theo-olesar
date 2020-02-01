@@ -1,0 +1,279 @@
+---
+title: 'Linguistic Data: Quantitative Analysis and Visualisation'
+subtitle: Lab 3. Student's t-test. Binomial test. R: Simulating data, matrices, boxplots
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+---
+
+## Student's t-test
+
+### Aspiration and vowel duration in Icelandic 
+
+This set is based on (Coretta 2017, [link](https://goo.gl/NrfgJm). This dissertation dealt with the relation between vowel duration and aspiration in consonants. Author carried out a data collection with 5 natives speakers of Icelandic. Then he extracted the duration of vowels followed by aspirated versus non-aspirated consonants. Check out whether vowels before aspirated consonants (like in Icelandic takka ‘key’ [tʰaʰka]) are signiﬁcantly shorter than vowels followed by non-aspirated consonants (like in kagga ‘barrel’ [kʰakka]).
+[Link](https://raw.githubusercontent.com/LingData2019/LingData2020/master/data/icelandic.csv) to the dataset.
+
+```{r}
+#df <- read_csv("https://raw.githubusercontent.com/LingData2019/LingData2020/master/data/icelandic.csv")
+```
+
+### Descriptive statistics
+
+A general boxplot:
+
+```{r}
+boxplot(df$vowel.dur)
+```
+
+Get the number of outliers:
+
+```{r}
+length(boxplot(df$vowel.dur)$out)
+```
+
+Look at number of observations by groups (aspirated and non-aspirated cases):
+
+```{r}
+table(df$aspriration)
+```
+
+Choose two subsamples, one for words where vowels are followed by aspirated consonants and another for non-aspirated consonants.
+
+```{r}
+asp <- df[df$aspiration == 'yes',]
+nasp <- df[df$aspiration == 'no',]
+```
+
+Summary for aspirated and non-aspirated cases:
+
+```{r}
+summary(asp$vowel.dur)
+summary(nasp$vowel.dur)
+```
+
+Boxplot by groups:
+
+```{r}
+boxplot(df$vowel.dur ~ df$aspiration)
+```
+
+More interesting - let us create a boxplot by all groups (see the field `cons1`):
+
+```{r}
+boxplot(df$vowel.dur ~ df$cons1)
+```
+
+You can compare distribution of `vowel.dur` in asp(irated), fri(cative), nasp(non-aspirated), voi(ced), etc.
+
+We can limit our data to just one type of vowels, say, middle vowels. Therefore, we will work with the same type of a consonant:
+
+```{r}
+asp <- df[df$aspiration == 'yes' & df$height == 'mid', ]
+nasp <- df[df$aspiration == 'no' & df$height == 'mid', ]
+```
+
+Again, here is a summary for a corrected case:
+
+```{r}
+summary(asp$vowel.dur)
+summary(nasp$vowel.dur)
+
+nrow(asp)
+nrow(nasp)
+```
+
+### T-test
+
+Let us formulate the null hypothesis, the alternative hypotesis, and apply t-test to our dataset.
+
+```{r}
+t.test(asp$vowel.dur, nasp$vowel.dur)
+```
+
+By default, R calculates t.test with regard to the bi-directional alternative hypothesis, such as $\mu_1 \neq \mu_2$.
+
+### Unidirectional t-test
+
+H1: $\mu_{asp} \lt \mu_{nasp}$
+
+```{r}
+t.test(asp$vowel.dur, nasp$vowel.dur, alternative = "less")
+```
+
+### Density plots
+```{r, message=FALSE, warning=FALSE}
+require(tidyverse)
+require(dplyr)
+```
+
+Let's get a descriptive summary of our data in a dplyr style.
+
+```{r}
+df %>% 
+  group_by(aspiration) %>%
+  summarise(mean = mean(vowel.dur),
+            st.dev = sd(vowel.dur))
+```
+
+Density plots can be thought of as plots of smoothed histograms.
+
+```{r, warning=FALSE, message=FALSE}
+library(ggplot2)
+df %>% 
+  ggplot(aes(vowel.dur, fill = aspiration, color = aspiration))+
+  geom_density(alpha = 0.4)+
+  geom_rug()+
+  labs(title = "Vowel duration density plot",
+       caption = "Data from (Coretta 2017)",
+       x = "vowel duration")
+```
+
+Density plot by speaker:
+
+```{r}
+df %>% 
+  ggplot(aes(vowel.dur, fill = aspiration, color = aspiration))+
+  geom_density(alpha = 0.4)+
+  geom_rug()+
+  facet_wrap(~speaker)+
+  labs(title = "Vowel duration density plot, by speaker",
+       caption = "Data from (Coretta 2017)",
+       x = "vowel duration")
+```
+
+and descriptive statistics:
+
+```{r}
+df %>% 
+  group_by(aspiration, speaker) %>%
+  summarise(mean = mean(vowel.dur),
+            st.dev = sd(vowel.dur))
+```
+
+
+
+## Simulating data 
+
+Create a matrix 2 * 3 consisting of 0: 
+
+```{r}
+matrix(0, nrow=2, ncol=3)
+```
+
+Arrange a vector of 12 values into matrix 3 * 4 arrange by rows:
+
+```{r}
+v <- 1:12
+m <- matrix(v, n=3, ncol=4, byrow = TRUE)
+m
+```
+
+Sum of every row in a matrix:
+
+```{r}
+rowSums(m)
+```
+
+Create a sample of 0 and 1 of size 10.
+
+```{r}
+sample(c(0, 1), 10, replace = TRUE)
+```
+
+Experiment: toss a coin 10 times and repeat this sequence 10000 times:
+
+```{r}
+tosses <- 10
+samples <- 10000
+dat <- matrix(sample(c(0, 1), tosses * samples, replace=TRUE), ncol=tosses, byrow=TRUE)
+```
+
+Calculate `phats` - proportions of heads in each experiment:
+
+```{r}
+pbar <- rowSums(dat) / tosses
+hist(pbar, breaks=tosses, xlim=c(0, 1))
+```
+
+Test $H_0: p = 0.5$:
+
+```{r}
+binom.test(3, 10, p=0.5) # 3 out of 10 - a fair coin?
+binom.test(2, 10)  # 2 out of 10 - a fair coin?
+binom.test(1, 10)  # 1 out of 10 - a fair coin?
+```
+
+Load some dataset and check some null hypothesis with binomial test.
+
+```{r}
+df <- read.csv("https://raw.githubusercontent.com/LingData2019/LingData2020/master/data/poetry_last_in_lines.csv", sep = "\t")
+```
+
+Suggest your hypotheses about p of nouns. Look at frequencies:
+
+```{r}
+table(df$UPoS)
+table(df$UPoS)/sum(table(df$UPoS))
+```
+
+Is it enough to make conclusions? No, proceed to formal tests:
+
+```{r}
+# select lines with nouns
+nouns <- df[df$UPoS=='NOUN',]
+total <- nrow(df) # number of trials
+nnouns <- nrow(nouns) # number of successes
+```
+
+```{r}
+# H0: p = 0.6
+
+```
+
+```{r}
+# H0: p = 0.4
+
+```
+
+```{r}
+# choose lines with one-syllable words at the end
+
+
+
+
+```
+
+```{r}
+# you can test on your own for every number of syllables
+
+
+```
+
+ 
+#### Supplementary R code
+
+This code generates a dataset that consists of Utterances (strings of letters) and Responces corresponding to each utterance (either 0 or 1)
+```{r generating-dataset}
+# require(stringi)
+n <- 1000 # the number of datapoins
+df <- cbind.data.frame(Utterance = stringi::stri_rand_strings(10, 5), # generate a random string
+                       Responce = rbinom(n, 1, 0.2))  # generate an answer (either 0 ot 1) randomly with p(1) = 0.2
+```
+
+This code run binom.test $n$ times with forward-pipes:
+```{r message=FALSE}
+require(dplyr)
+require(broom)
+m <- 5 # sample size in each run
+n <- 10 # the number of experiments
+dat <- replicate(n=n, expr = sample(0:1, size=m, replace=TRUE)) %>% 
+           t() %>%                    # transpose row and columns
+           as.data.frame() %>% 
+           mutate(ID=row_number(), sum=rowSums(.), m=m) # add ID, row sums, sample size
+dat2 <- dat %>% 
+            group_by(ID) %>%
+            do(tidy(binom.test(.$sum, .$m, alternative = "two.sided"))) %>%
+            select(ID, p.value)
+```
