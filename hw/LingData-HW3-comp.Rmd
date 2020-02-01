@@ -209,6 +209,30 @@ Write down your general conlusions about data provided for both 1920s and 1820s 
 
 ```
 
+### Problem 8. One-sample t-test
+Using Icelandic data on vowel duration from seminar [Link](https://raw.githubusercontent.com/LingData2019/LingData2020/master/data/icelandic.csv) test the null hypothesis that the population mean of vowel duration in speaker `shg05` equals 73 (ms).
+To perform a one-sample t-test, you can use the following example of R code: 
+```
+t.test(sample, mu = 7725) # mu is a population mean
+```
+
+### 8.1
+Write down a two-tailed alternative hypothesis.
+```
+H1: 
+```
+
+### 8.2
+Perform a one-sample t-test. 
+```{r}
+
+```
+
+### 8.3
+Interpret results. 
+```
+
+```
 
 #### Supplementary reading
 Use of exact binomial test in lingiistic research:  

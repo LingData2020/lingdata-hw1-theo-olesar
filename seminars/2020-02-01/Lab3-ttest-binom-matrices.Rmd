@@ -28,6 +28,9 @@ A general boxplot:
 
 ```{r}
 boxplot(df$vowel.dur)
+mean(df[df$speaker == 'shg05',]$vowel.dur)
+t.test(df[df$speaker == 'shg05',]$vowel.dur, mu=73)
+
 ```
 
 Get the number of outliers:
