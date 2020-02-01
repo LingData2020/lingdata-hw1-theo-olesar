@@ -1,0 +1,239 @@
+---
+title: 'Linguistic Data: Quantitative Analysis and Visualisation'
+author: <h4 style="font-style:normal;font-weight:normal">Ilya Schurov, Olga Lyashevskaya, George Moroz, Alla Tambovtseva</h4>
+date: <h4 style="font-weight:normal">12 January 2019</h4>
+output:
+  html_document: default
+---
+## Basics of R: variables, vectors and descriptive statistics
+
+### R as calculator
+
+Let's look at very basic calculations in R.
+
+```{r}
+1 + 4 # addition
+```
+
+```{r}
+4 - 9 # subtraction
+```
+
+```{r}
+6 * 5 + 7 / 2 # multiplication and division
+```
+
+```{r}
+sqrt(36) # taking a square root
+```
+
+```{r}
+6 ^ 2 # raising to power
+```
+
+```{r}
+6 ** 2 # the same
+```
+
+**Note:** if you are planning to work both in R and Python, you had better memorize the latter variant of raising a number to some power (via `**`) since in Python the operator `^` corresponds to the bitwise addition that has nothing in common with powers.
+
+In R we can calculate logarithms as well. By default the `log()` function returns the natural logarithm, the logarithm of the base `e`. In English books it is usually denoted as `log`, in Russian ones it is denoted as `ln`.
+
+```{r}
+log(4)
+```
+
+We can also specify the base of a logarithm adding the option `base`:
+
+```{r}
+log(4, base = 2)  # so 2^2 = 4
+```
+
+Or calculate a logarithm of a base 10:
+
+```{r}
+log10(100)  # the same as log(100, base=10)
+```
+
+If we want to round the results obtained, we can use the function `round()`:
+
+```{r}
+round(12.57)
+```
+
+By default it rounds a value to the closest integer, so we got 13 above. However, we can specify the number of digits we want to see after a decimal point:
+
+```{r}
+round(12.57, 1)  # round to tenths, 1 digit after .
+```
+
+
+### Variables in R
+
+Names of the variables in R can contain letters, numbers, dots and underscores, but the name of a variable cannot start with a number (as in many programming languages). A name of a variable should not coincide with the reserved R words and operators (like `if`, `else`, `for`, `while`, etc).
+
+Both operators `<-` and `=` can be used for assigning values to variables, but `<-` is a 'canonical' R operator that is usually applied in practice. In other words, writing code with `=` is technically correct, but not cool and has to be avoided :)
+
+```{r}
+a <- 3
+a
+```
+
+We can change the value of a variable and save it again with the same name:
+
+```{r}
+x <- 2
+x <- x + 3
+x # updated, now it is 3 + 2 = 5
+```
+
+We can also assign text values to variables. A text is usually written in quotes:
+
+```{r}
+s <- "hello"
+s 
+```
+
+It does not matter which quotes, single `''` or double `""` we will use. The only important thing is that the opening and the closing quote should be of the same type, so it is not allowed to write something like this: `"hello'`.
+
+There are many functions that are aimed at working with text variables (in R they are called *character variables*), but now we will not concentrate on them. Just as an example, look at the function `toupper()` that converts all letters into capital ones:
+
+```{r}
+toupper(s)
+```
+
+Note that the original value of `s` has not changed, it is still in small letters: 
+
+```{r}
+s
+```
+
+To save changes we have to reassign a value to `s`:
+
+```{r}
+s <- toupper(s)
+s  # updated
+```
+
+### Vectors in R
+
+A vector in R is a list (a series) of elements. It is created in the following way using the special function `c()`:
+
+```{r}
+v <- c(1, 0, 0, 1, 2) # vector v
+```
+
+We can look at this vector:
+
+```{r}
+v
+```
+
+To get the type of a vector (at least, whether it is numeric or not), we can use the function `class()`:
+
+```{r}
+class(v) # numeric values, not text ones
+```
+
+Also we can define *a length of a vector*, i.e. a number of its elements:
+
+```{r}
+length(v)
+```
+
+So as to choose an element of a vector by its index (its position in a vector), we should specify it in square brackets:
+
+```{r}
+v[1]  # first element
+v[2]  # second element 
+```
+
+Note that in R the numeration starts from 1, so if you got used to Python or other programming languages, take this into account. Requesting a zero element will result in nothing:
+
+```{r}
+v[0]  # no error, but no such element
+```
+
+Not only numeric vectors can be created, character ones are possible:
+
+```{r}
+names <- c('Ann', 'Tom')
+names
+```
+
+### Descriptive statistics in R
+
+Consider the following sample (we save its elements to the vector `x`):
+
+```{r}
+x <- c(6, 6, 7, 0, 14, 24, 16, 15, 2, 0)
+x
+```
+
+Let's calculate several descriptive statistics for a numeric sample. 
+
+```{r}
+min(x) # maximum value
+max(x) # maximum value
+mean(x) # an average, a sample mean
+median(x) # a median
+var(x) # a sample variance
+sd(x) # a standard deviation
+```
+
+**Note:** by default R computes a corrected sample variance (with good statistical properties), one with $n-1$ in the denominator. 
+
+And what if we work with a categorical sample? For example, we have a text (character) vector:
+
+```{r}
+y <- c("a", "b", "c", "a", "c", "c")
+```
+
+We can calculate the frequences of the values using the fucntion `table()`: 
+
+```{r}
+table(y)
+```
+
+This function returns absolute frequences. To get relative ones, we can compute them manually dividing every absolute frequency by the sum of all frequences for a sample:
+
+```{r}
+table(y)/sum(table(y))
+```
+
+Now let us proceed to histograms (of course, it is suitable only for numeric vectors). We can plot a histogram of our sample `x`:
+
+```{r}
+hist(x)  # hist - from histogram
+```
+
+By default a histogram is white, but you can add a color: 
+
+```{r}
+hist(x, col="red")  # col for color
+```
+
+Or: 
+
+```{r}
+hist(x, col="hotpink")  # more interesting color
+```
+
+There is a lot of colors in R, see the full list [here](http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf). 
+
+Now we will not focus on styling, we will discuss it later, but we should mention two points important from a statistical standpoint: setting different types of values by a vertical axis and choosing a different number of bins (rectangles in a histogram).
+
+We can indicate normalised frequences by a vertical axis, i.e. values adjusted in such a way that a histogram has a total area of one. 
+
+```{r}
+# freq=FALSE, not absolute frequences by y-axis
+hist(x, col="red", freq=FALSE)  
+```
+
+So as to choose a number of rectangles in a histogram different from one set by default (if you are interested, read about [Sturges' algorithm](https://en.wikipedia.org/wiki/Histogram#Sturges'_formula) or [other](https://www.rdocumentation.org/packages/grDevices/versions/3.5.1/topics/nclass) algorithms used in R) you can add a corresponding option:
+
+```{r}
+hist(x, col="red", freq=FALSE, breaks=3)  # 3 bins
+```
+
+That is all for today. If you need something more, please, see the optional materials for this course.
