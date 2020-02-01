@@ -38,7 +38,7 @@ length(boxplot(df$vowel.dur)$out)
 Look at number of observations by groups (aspirated and non-aspirated cases):
 
 ```{r}
-table(df$aspriration)
+table(df$aspiration)
 ```
 
 Choose two subsamples, one for words where vowels are followed by aspirated consonants and another for non-aspirated consonants.
@@ -248,7 +248,7 @@ nnouns <- nrow(nouns) # number of successes
 ```
 
 ```{r}
-# you can test on your own for every number of syllables
+# you can test on your own for any number of syllables
 
 
 ```
@@ -279,3 +279,13 @@ dat2 <- dat %>%
             do(tidy(binom.test(.$sum, .$m, alternative = "two.sided"))) %>%
             select(ID, p.value)
 ```
+
+#### Supplementary materials: Outliers 
+
+By default, boxplot in R is plotted with whiskers and outliers. The usual method to identify outliers (points that lie beyond the extremes of the whiskers) is based on the notion of median, lower (1st) and upper (3rd) quartiles, and certain coefficient like 1.5 below.
+Inter-quartile range (IQR) is a difference between the 1st quartile (Q3) and the 3rd quartile (Q1):
+IQR = Q3 - Q1.
+Lower outlier limit = Q1 - 1.5 * IQR, 
+Upper outlier limit = Q3 + 1.5 * IQR.
+
+See also boxplot notches (plotted by request) that extend to Q1 + 1.58 * IQR/sqrt(n) and Q1 - 1.58 * IQR/sqrt(n), [figure](https://media.geeksforgeeks.org/wp-content/uploads/fake-data-notch-boxplot.jpg) and are usually interpreted as a 95% confidence interval for the median. 
