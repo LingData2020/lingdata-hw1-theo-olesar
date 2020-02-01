@@ -1,6 +1,6 @@
 ---
 title: 'Linguistic Data: Quantitative Analysis and Visualisation'
-subtitle: 'Lab 3. Student`s t-test. Binomial test. R: Simulating data, matrices, boxplots'
+subtitle: 'Lab 3. Student`s t-test. Binomial test. R: Simulating data, boxplots, density plots'
 output:
   html_document:
     df_print: paged
@@ -12,10 +12,11 @@ output:
 
 ### Aspiration and vowel duration in Icelandic 
 
-This set is based on (Coretta 2017, [link](https://goo.gl/NrfgJm). This dissertation dealt with the relation between vowel duration and aspiration in consonants. Author carried out a data collection with 5 natives speakers of Icelandic. Then he extracted the duration of vowels followed by aspirated versus non-aspirated consonants. Check out whether vowels before aspirated consonants (like in Icelandic takka ???key??? [t??a??ka]) are signi???cantly shorter than vowels followed by non-aspirated consonants (like in kagga ???barrel??? [k??akka]).
+This set is based on (Coretta 2017, [link](https://goo.gl/NrfgJm)). This dissertation dealt with the relation between vowel duration and aspiration in consonants. Author carried out a data collection with 5 natives speakers of Icelandic. Then he extracted the duration of vowels followed by aspirated versus non-aspirated consonants. Check out whether vowels before aspirated consonants (like in Icelandic takka ‘key’ [tʰaʰka]) are signiﬁcantly shorter than vowels followed by non-aspirated consonants (like in kagga ‘barrel’ [kʰakka]).  
 [Link](https://raw.githubusercontent.com/LingData2019/LingData2020/master/data/icelandic.csv) to the dataset.
 
-```{r}
+```{r message=FALSE}
+Sys.setlocale("LC_ALL", 'en_US.UTF-8')
 library(readr)
 library(tidyverse)
 df <- read_csv("https://raw.githubusercontent.com/LingData2019/LingData2020/master/data/icelandic.csv")
@@ -184,6 +185,29 @@ Create a sample of 0 and 1 of size 10.
 sample(c(0, 1), 10, replace = TRUE)
 ```
 
+### Sample size and variance 
+
+```{r}
+population <- c(1, 2, 3, 4, 5)
+sample_size <- 2
+means <- rep(NA, 10000)
+for (i in 1:10000) {
+  samp <- sample(population, size=sample_size, replace=TRUE)
+  means[i] <- mean(samp)
+}
+library(ggplot2)
+ggplot() + 
+  geom_histogram(aes(means), bins = 100) +
+  xlim(c(0, 5))
+```
+
+Now you can change the sample size to see how the distribution of means changes. 
+
+See also code for [Simulating variance estimates](https://rstudio-pubs-static.s3.amazonaws.com/237011_27e85fe7e17e4c73a260cb27e60fb012.html)
+
+
+## Binomial test 
+
 Experiment: toss a coin 10 times and repeat this sequence 10000 times:
 
 ```{r}
@@ -283,9 +307,9 @@ dat2 <- dat %>%
 #### Supplementary materials: Outliers 
 
 By default, boxplot in R is plotted with whiskers and outliers. The usual method to identify outliers (points that lie beyond the extremes of the whiskers) is based on the notion of median, lower (1st) and upper (3rd) quartiles, and certain coefficient like 1.5 below.
-Inter-quartile range (IQR) is a difference between the 1st quartile (Q3) and the 3rd quartile (Q1):
-IQR = Q3 - Q1.
-Lower outlier limit = Q1 - 1.5 * IQR, 
-Upper outlier limit = Q3 + 1.5 * IQR.
+Inter-quartile range (IQR) is a difference between the 1st quartile (Q3) and the 3rd quartile (Q1):  
+IQR = Q3 - Q1,  
+Lower outlier limit = Q1 - 1.5 * IQR,  
+Upper outlier limit = Q3 + 1.5 * IQR.  
 
-See also boxplot notches (plotted by request) that extend to Q1 + 1.58 * IQR/sqrt(n) and Q1 - 1.58 * IQR/sqrt(n), [figure](https://media.geeksforgeeks.org/wp-content/uploads/fake-data-notch-boxplot.jpg) and are usually interpreted as a 95% confidence interval for the median. 
+See also boxplot notches (plotted by request) that extend to Q1 + 1.58 \* IQR/sqrt(n) and Q1 - 1.58 \* IQR/sqrt(n), [figure](https://media.geeksforgeeks.org/wp-content/uploads/fake-data-notch-boxplot.jpg) and are usually interpreted as a 95% confidence interval for the median. 
