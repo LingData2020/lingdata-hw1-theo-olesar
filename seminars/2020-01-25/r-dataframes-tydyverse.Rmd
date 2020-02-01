@@ -1,0 +1,268 @@
+---
+title: 'Linguistic Data: Quantitative Analysis and Visualisation'
+author: <h4 style="font-style:normal;font-weight:normal">George Moroz, Ilya Schurov, Olga Lyashevskaya</h4>
+date: <h4 style="font-weight:normal">25 January 2020</h4>
+output:
+  html_document: default
+---
+
+# `tidyverse`: Loading and transforming data {#tidy_dplyr} 
+
+[_tidyverse_](https://www.tidyverse.org) is a set of packages:
+
+* _ggplot2_, to visualise data 
+* _tibble_, to make nice views for dataframes 
+* _tidyr_, tidy data format 
+* _readr_, to read files in R 
+* _purrr_, to do functional programming 
+* _dplyr_, to transform data 
+* _stringr_, to work with strings 
+* _forcats_, to work with categorial variables 
+
+Other useful packages: 
+
+* _readxl_, to read .xls и .xlsx  
+* _jsonlite_, to work with JSON  
+* _rvest_, to do web scrapping  
+* _lubridate_, for time data  
+* _tidytext_, to work with texts and corpora  
+* _broom_, to transfer statistic models in tidy format  
+
+```{r, message = TRUE}
+library("tidyverse")
+```
+
+## Loading the data 
+### Working directory 
+
+Two functions to set up your working directory: `getwd()` and `setwd(.../path/to/your/directory)`. 
+
+### Working with packages  
+
+```{r, eval = FALSE}
+install.packages("package_name") # install a package on your laptop/PC/cloud  
+# installed.packages() - to see what packages are installed 
+
+library(package_name) # to load the package and make it available in the current R session (workspace) 
+# require(package_name) - another option to load the package used inside other functions. It gives a warning if the package does not exist.  
+```
+There are two steps: (i) getting the package onto your device and (ii) loading it into R. [More on that](https://www.r-bloggers.com/how-to-install-packages-on-r-screenshots/). 
+You can be asked to choose the CRAN mirror of R package archive or to install related/dependent packages during the installation. 
+
+Packages under development can be installed directly from Github:
+```{r, eval = FALSE}
+install.packages("devtools")
+devtools::install_github("hadley/devtools")
+```
+
+### `.csv` files 
+
+`.csv` (comma separated values) is the most popular file format to store the (tabular) data. 
+NB [Microsoft Excel нужны некоторые трюки](https://superuser.com/questions/291445/how-do-you-change-default-delimiter-in-the-text-import-in-excel).
+
+### Reading data: `readr`, `readxl` 
+* Basic R: `read.csv()`,
+* Tydyverse: `read_csv()` (package `readr`) 
+
+```{r, eval = FALSE}
+read_csv("...")
+```
+
+What's within brackets?
+
+* file name (please check that it exists in your working directory)
+```{r, eval = FALSE}
+read_csv("my_file.csv")
+```
+
+* relative path to the file
+```{r, eval = FALSE}
+read_csv("data/my_file.csv")
+```
+
+* full path to the file
+```{r, eval = FALSE}
+read_csv("/home/user_name/work/data/my_file.csv")
+```
+
+* URL (please check that you are connected to internet)
+```{r, eval = FALSE}
+read_csv("https://my_host/my_file.csv")
+```
+
+Other functions to read `.csv` files:
+
+* `read_tsv()` -- tab-separated files 
+* `read_csv2()` -- semicolon-separated files   
+* `read_delim(file = "...", delim = "...")` -- any separator set as `delim`
+
+```{r}
+library(readr) # included in tidyverse
+df <- read_csv("https://goo.gl/v7nvho")
+head(df)
+df <- read_tsv("https://goo.gl/33r2Ut")
+head(df)
+df <- read_delim("https://goo.gl/33r2Ut", delim = "\t")
+head(df)
+```
+
+### `dplyr`
+
+```{r}
+homo <- read_csv("https://raw.githubusercontent.com/LingData2019/LingData2020/master/data/orientation.csv")
+homo
+```
+The majority of examples in that presentation are based on [Hau 2007]. Experiment consisted of a perception and judgment test aimed at measuring the correlation between acoustic cues and perceived sexual orientation. Naïve Cantonese speakers were asked to listen to the Cantonese speech samples collected in Experiment and judge whether the speakers were gay or heterosexual. There are 14 speakers and following parameters:
+* [s] duration (_s.duration.ms_)
+* vowel duration (_vowel.duration.ms_)
+* fundamental frequencies mean (F0) (_average.f0.Hz_)
+* fundamental frequencies range (_f0.range.Hz_)
+* percentage of homosexual impression (_perceived.as.homo_)
+* percentage of heterosexal impression (_perceived.as.hetero_)
+* speakers orientation (_orientation_)
+* speakers age (_age_)
+
+#### `dplyr::filter()`
+How many speakers are older than 28?
+```{r}
+homo %>%
+  filter(age > 28, s.duration.ms < 60)
+```
+The `%>%` operators pipe their left-hand side values forward into expressions that appear on the right-hand side, i.e. one can replace f(x) with x %>% f().
+```{r}
+sort(sqrt(abs(sin(1:22))), decreasing = TRUE)
+1:22 %>% 
+  sin() %>% 
+  abs() %>% 
+  sqrt() %>% 
+  sort(., decreasing = TRUE) # зачем здесь точка?
+```
+
+#### `dplyr::slice()`
+```{r}
+homo %>%
+  slice(3:7)
+```
+
+#### `dplyr::select()`
+```{r}
+homo %>%
+  select(8:10)
+homo %>%
+  select(speaker:average.f0.Hz)
+homo %>%
+  select(-speaker)
+homo %>%
+  select(-c(speaker, perceived.as.hetero, perceived.as.homo, perceived.as.homo.percent))
+homo %>%
+  select(speaker, age, s.duration.ms)
+```
+#### `dplyr::arrange()`
+```{r}
+homo %>%
+  arrange(orientation, desc(age))
+```
+#### `dplyr::distinct()`
+```{r}
+homo %>%
+  distinct(orientation)
+homo %>%
+  distinct(orientation, age > 20)
+```
+#### 4.6 `dplyr::mutate()`
+```{r}
+homo %>%
+  mutate(f0.mn = average.f0.Hz - f0.range.Hz/2,
+         f0.mx = (average.f0.Hz + f0.range.Hz/2))
+```
+#### 4.7 `dplyr::group_by(...) %>% summarise(...)`
+```{r}
+homo %>%
+  summarise(min(age), mean(s.duration.ms))
+homo %>%
+  group_by(orientation) %>% 
+  summarise(my_mean = mean(s.duration.ms))
+homo %>%
+  group_by(orientation) %>% 
+  summarise(mean(s.duration.ms))
+homo %>%
+  group_by(orientation) %>% 
+  summarise(mean_by_orientation = mean(s.duration.ms))
+```
+If you need to count number of group members, it is posible to use function `n()` in `summarise()` or `count()` function if you don't need any other statistics.
+```{r}
+homo %>% 
+  group_by(orientation, age > 20) %>% 
+  summarise(my_mean = mean(s.duration.ms), n_observations = n())
+homo %>% 
+  count(orientation, age > 20)
+```
+#### `dplyr::.._join()`
+```{r}
+languages <- data_frame(
+  languages = c("Selkup", "French", "Chukchi", "Kashubian"),
+  countries = c("Russia", "France", "Russia", "Poland"),
+  iso = c("sel", "fra", "ckt", "pol")
+  )
+languages
+country_population <- data_frame(
+  countries = c("Russia", "Poland", "Finland"),
+  population_mln = c(143, 38, 5))
+country_population
+inner_join(languages, country_population)
+left_join(languages, country_population)
+right_join(languages, country_population)
+anti_join(languages, country_population)
+anti_join(country_population, languages)
+full_join(country_population, languages)
+```
+There is a nice trick that groups together calculated statistics with source data.frame. Just use `.._join()`:
+```{r}
+homo %>% 
+  group_by(orientation, age > 20) %>% 
+  summarise(my_mean = mean(s.duration.ms), n_observations = n())
+homo %>% 
+  group_by(orientation, age > 20) %>% 
+  summarise(my_mean = mean(s.duration.ms), n_observations = n()) %>% 
+  left_join(homo)
+```
+
+
+### `tidyr` package
+* Short format
+```{r}
+df.short <- data.frame(
+                   consonant = c("stops", "fricatives", "affricates", "nasals"),
+                   initial = c(123, 87, 73, 7),
+                   intervocal = c(57, 77, 82, 78),
+                   final = c(30, 69, 12, 104))
+df.short
+```
+* Long format
+```{r, echo = FALSE}
+df.short %>% 
+  gather(position, number, initial:final) ->
+  df.long
+df.long
+```
+* Short format → Long format: `tidyr::gather()`
+```{r}
+df.short <- data.frame(
+                   consonant = c("stops", "fricatives", "affricates", "nasals"),
+                   initial = c(123, 87, 73, 7),
+                   intervocal = c(57, 77, 82, 78),
+                   final = c(30, 69, 12, 104))
+df.short
+df.short %>% 
+  gather(position, number, initial:final) ->
+  df.long
+df.long
+```
+* Long format → Short format: `tidyr::spread()`
+```{r}
+df.long %>% 
+  spread(position, number) ->
+  df.short
+df.short
+```
+
