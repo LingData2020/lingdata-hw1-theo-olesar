@@ -1,6 +1,6 @@
 ---
 title: 'Linguistic Data: Quantitative Analysis and Visualisation'
-subtitle: Lab 3. Student's t-test. Binomial test. R: Simulating data, matrices, boxplots
+subtitle: 'Lab 3. Student`s t-test. Binomial test. R: Simulating data, matrices, boxplots'
 output:
   html_document:
     df_print: paged
@@ -12,11 +12,13 @@ output:
 
 ### Aspiration and vowel duration in Icelandic 
 
-This set is based on (Coretta 2017, [link](https://goo.gl/NrfgJm). This dissertation dealt with the relation between vowel duration and aspiration in consonants. Author carried out a data collection with 5 natives speakers of Icelandic. Then he extracted the duration of vowels followed by aspirated versus non-aspirated consonants. Check out whether vowels before aspirated consonants (like in Icelandic takka ‘key’ [tʰaʰka]) are signiﬁcantly shorter than vowels followed by non-aspirated consonants (like in kagga ‘barrel’ [kʰakka]).
+This set is based on (Coretta 2017, [link](https://goo.gl/NrfgJm). This dissertation dealt with the relation between vowel duration and aspiration in consonants. Author carried out a data collection with 5 natives speakers of Icelandic. Then he extracted the duration of vowels followed by aspirated versus non-aspirated consonants. Check out whether vowels before aspirated consonants (like in Icelandic takka ???key??? [t??a??ka]) are signi???cantly shorter than vowels followed by non-aspirated consonants (like in kagga ???barrel??? [k??akka]).
 [Link](https://raw.githubusercontent.com/LingData2019/LingData2020/master/data/icelandic.csv) to the dataset.
 
 ```{r}
-#df <- read_csv("https://raw.githubusercontent.com/LingData2019/LingData2020/master/data/icelandic.csv")
+library(readr)
+library(tidyverse)
+df <- read_csv("https://raw.githubusercontent.com/LingData2019/LingData2020/master/data/icelandic.csv")
 ```
 
 ### Descriptive statistics
